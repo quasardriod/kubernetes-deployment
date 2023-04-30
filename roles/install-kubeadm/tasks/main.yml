@@ -1,0 +1,63 @@
+---
+
+- name: Check if /etc/kubernetes/admin.conf already exists
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  register: _kconfig
+
+- name: Check state of the cluster
+  ansible.builtin.shell: kubectl cluster-info
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: _kstatus
+
+- ansible.builtin.debug:
+    var: _kstatus.stdout_lines
+
+- ansible.builtin.pause:
+    echo: yes
+    minutes: 15
+    prompt: "\n
+      Review cluster status in above output. \n
+      If it's looking healthy Continue, else Abort and troubleshoot problem"
+  when: _kstatus.rc == 0
+  
+- block:
+  - name: Initialize k8s master
+    ansible.builtin.command: kubeadm init
+    run_once: true
+    register: _kinit
+
+  - ansible.builtin.debug:
+      var: _kinit.stdout_lines
+    run_once: true
+  when: not _kconfig.stat.exists
+
+- name: Set Permission on /etc/kubernetes/admin.conf
+  ansible.builtin.file:
+    path: /etc/kubernetes/admin.conf
+    mode: 0644
+
+- name: Create .kube in {{ansible_user}} home
+  ansible.builtin.file:
+    path: "/home/{{ansible_user}}/.kube"
+    state: directory
+  become: false
+
+- name: Copy /etc/kubernetes/admin.conf in .kube
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "/home/{{ansible_user}}/.kube/config"
+    mode: 0644
+    remote_src: true
+  become: false
+
+- name: Get Pending cluster
+  ansible.builtin.shell: kubectl get pods -n kube-system|egrep -i pending
+  register: _ksystem_ns
+  become: false
+  ignore_errors: true
+
+- ansible.builtin.debug:
+    msg: "Found some pods in pending state in kube-system NS. Please Check"
+  when: _ksystem_ns.rc == 0

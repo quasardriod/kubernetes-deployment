@@ -1,0 +1,30 @@
+---
+
+- name: Create /etc/modules-load.d/k8s.conf
+  ansible.builtin.copy:
+    src: modules/k8s.conf
+    dest: /etc/modules-load.d/k8s.conf
+    mode: 0644
+    owner: root
+    group: root
+  register: _modules
+  
+- name: Enable overlay and br_netfilter Kernel modules
+  ansible.builtin.command: modprobe {{item}}
+  with_items:
+    - overlay
+    - br_netfilter
+  when: _modules is changed
+
+- name: Create /etc/sysctl.d/k8s.conf
+  ansible.builtin.copy:
+    src: sysctl/k8s.conf
+    dest: /etc/sysctl.d/k8s.conf
+    mode: 0644
+    owner: root
+    group: root
+  register: _sysctl
+    
+- name: Apply sysctl changes
+  ansible.builtin.command: sysctl --system
+  when: _sysctl is changed

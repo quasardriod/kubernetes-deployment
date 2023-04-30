@@ -1,0 +1,27 @@
+---
+ 
+- name: Install Containerd packages
+  ansible.builtin.apt:
+    name: "{{containerd_packages}}"
+    update_cache: yes
+    state: latest
+  when: ansible_distribution == "Ubuntu"
+
+#- name: Generate containerd config.toml
+#  ansible.builtin.command: containerd config default > /etc/containerd/config.toml
+#  register: _containerd_config
+
+- name: Copy containerd config.toml
+  ansible.builtin.copy:
+   src: containerd/config.toml
+   dest: /etc/containerd/
+   mode: 0644
+   owner: root
+   group: root
+  register: _containerd_config
+
+- name: Restart containerd
+  ansible.builtin.systemd:
+    name: containerd
+    state: restarted
+  when: _containerd_config is changed

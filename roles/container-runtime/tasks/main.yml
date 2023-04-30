@@ -1,0 +1,4 @@
+---
+
+- ansible.builtin.include_tasks: network-prerequisites.yml
+- ansible.builtin.include_tasks: containerd.yml

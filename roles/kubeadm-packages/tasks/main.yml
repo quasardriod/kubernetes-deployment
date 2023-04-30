@@ -1,0 +1,39 @@
+---
+
+- name: Install google cloud public signing key
+  ansible.builtin.shell: curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+  when: ansible_distribution == "Ubuntu"
+
+- name: Add kubernetes apt key
+  ansible.builtin.shell: echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+  when: ansible_distribution == "Ubuntu"
+
+- name: Install Packages on Ubuntu
+  ansible.builtin.apt:
+    name:
+      - kubelet
+      - kubeadm 
+      - kubectl
+    state: latest
+    update_cache: yes
+  when: ansible_distribution == "Ubuntu"
+
+- name: Fixed kube version
+  ansible.builtin.command: apt-mark hold kubelet kubeadm kubectl
+  when: ansible_distribution == "Ubuntu"
+
+- name: Show k8s images
+  ansible.builtin.command: kubeadm config images list
+  when: inventory_hostname in groups.master
+  register: _k8s_images
+  run_once: true
+
+- ansible.builtin.debug:
+    var: _k8s_images.stdout_lines
+  when: inventory_hostname in groups.master
+  run_once: true
+
+- name: Pull k8s images
+  ansible.builtin.command: kubeadm config images pull
+  when: inventory_hostname in groups.master
+  run_once: true
