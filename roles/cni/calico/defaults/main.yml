@@ -1,0 +1,2 @@
+calico_version: 'v3.25'
+calico_manifest: "https://docs.projectcalico.org/archive/{{calico_version}}/manifests/calico.yaml"

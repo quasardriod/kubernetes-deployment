@@ -8,7 +8,7 @@
 - name: Check state of the cluster
   ansible.builtin.shell: kubectl cluster-info
   environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
+    KUBECONFIG: "{{KUBECONFIG}}"
   register: _kstatus
 
 - ansible.builtin.debug:
@@ -52,12 +52,7 @@
     remote_src: true
   become: false
 
-- name: Get Pending cluster
-  ansible.builtin.shell: kubectl get pods -n kube-system|egrep -i pending
-  register: _ksystem_ns
-  become: false
-  ignore_errors: true
-
-- ansible.builtin.debug:
-    msg: "Found some pods in pending state in kube-system NS. Please Check"
-  when: _ksystem_ns.rc == 0
+- name: Do lookup for non-running pods
+  ansible.builtin.include_role:
+    name: health-check
+    tasks_from: pods-health.yml

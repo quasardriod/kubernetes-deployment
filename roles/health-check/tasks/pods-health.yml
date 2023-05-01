@@ -1,0 +1,17 @@
+---
+
+# Lookup for pods not in running state
+- name: Filter Non Running pods
+  ansible.builtin.command: kubectl get pods -n {{ns}} --field-selector=status.phase!=Running
+  environment:
+    KUBECONFIG: "{{KUBECONFIG}}"
+  register: _non_running_pods
+  tags:
+    - non-running-pods
+
+- ansible.builtin.debug:
+    msg:
+      - "Found following pods in non-running state"
+      - "{{_non_running_pods.stdout_lines}}"
+  tags:
+    - non-running-pods

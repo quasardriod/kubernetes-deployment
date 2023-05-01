@@ -1,0 +1,12 @@
+---
+
+- hosts: master
+  gather_facts: true
+  become: yes
+
+  vars:
+    cni_provider: calico
+
+  roles:
+  - role: cni/calico
+    when: cni_provider == 'calico'

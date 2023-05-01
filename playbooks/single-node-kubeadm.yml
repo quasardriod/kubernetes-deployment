@@ -9,3 +9,7 @@
 
   roles:
   - role: install-kubeadm
+
+- ansible.builtin.import_playbook: common/cni-provider.yml
+  vars:
+    cni_provider: calico

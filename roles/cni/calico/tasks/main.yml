@@ -1,0 +1,50 @@
+---
+
+- name: Check Calico state
+  ansible.builtin.script: calico-healthcheck.sh
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  args:
+    executable: /bin/bash
+  register: _chealth
+
+- ansible.builtin.debug:
+    msg: "Calico is healthy"
+  when: _chealth.stdout is match('calico is healthy')
+
+- ansible.builtin.fail:
+    msg: "Calico is not healthy. Login in master and troubleshoot"
+  when: _chealth.stdout is match('calico is unhealthy')
+
+- block:
+  - name: Download Calico Manifest {{calico_version}}
+    ansible.builtin.get_url:
+      url: "{{calico_manifest}}"
+      dest: /root/calico.yaml
+      mode: 0644
+
+  - name: Apply Calico config
+    ansible.builtin.command: kubectl apply -f /root/calico.yaml
+    environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+
+  - name: Wait for calico to come up
+    ansible.builtin.pause:
+      echo: yes
+      minutes: 10
+  when: _chealth.stdout is match('calico not found')
+
+- name: Do lookup for non-running pods
+  ansible.builtin.include_role:
+    name: health-check
+    tasks_from: pods-health.yml
+    apply:
+      tags:
+        - non-running-pods
+  vars:
+    ns: 'kube-system'
+
+- ansible.builtin.fail:
+    msg:
+      - "Error: In kube-system NS, some pods are not running, manual troubleshooting is needed"
+  when: _non_running_pods.stdout != ""
