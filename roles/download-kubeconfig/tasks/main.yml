@@ -1,0 +1,14 @@
+---
+
+- name: Create .kube
+  ansible.builtin.file:
+    path: "{{lookup('env', 'HOME')}}/.kube"
+    state: directory
+  delegate_to: localhost
+
+- name: Fetch kubeconfig from master to localhost
+  ansible.builtin.fetch:
+    src: "{{KUBECONFIG}}"
+    dest: "{{LOCAL_KUBECONFIG}}"
+    flat: yes
+    mode: 0644

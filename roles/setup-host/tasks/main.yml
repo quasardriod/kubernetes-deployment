@@ -5,9 +5,6 @@
     path: /etc/apt/keyrings/docker.gpg
   register: _docker_gpg
 
-- debug:
-    var: _docker_gpg
-
 - name: Install Docker gpgkey
   ansible.builtin.shell: |
     install -m 0755 -d /etc/apt/keyrings

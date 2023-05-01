@@ -1,2 +1,3 @@
 ---
 KUBECONFIG: /etc/kubernetes/admin.conf
+LOCAL_KUBECONFIG: "{{lookup('env', 'HOME')}}/.kube/config"

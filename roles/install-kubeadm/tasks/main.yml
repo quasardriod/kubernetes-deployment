@@ -5,22 +5,26 @@
     path: /etc/kubernetes/admin.conf
   register: _kconfig
 
-- name: Check state of the cluster
-  ansible.builtin.shell: kubectl cluster-info
-  environment:
-    KUBECONFIG: "{{KUBECONFIG}}"
-  register: _kstatus
+- block:
+  - name: Check state of the cluster
+    ansible.builtin.shell: kubectl cluster-info
+    environment:
+      KUBECONFIG: "{{KUBECONFIG}}"
+    register: _kstatus
 
-- ansible.builtin.debug:
-    var: _kstatus.stdout_lines
+  - name: show k8s cluter-info
+    ansible.builtin.debug:
+      var: _kstatus.stdout_lines
 
-- ansible.builtin.pause:
-    echo: yes
-    minutes: 15
-    prompt: "\n
-      Review cluster status in above output. \n
-      If it's looking healthy Continue, else Abort and troubleshoot problem"
-  when: _kstatus.rc == 0
+  - name: Review cluster status
+    ansible.builtin.pause:
+      echo: yes
+      minutes: 15
+      prompt: "\n
+        Review cluster status in above output. \n
+        If it's looking healthy Continue, else Abort and troubleshoot problem"
+    when: _kstatus.rc == 0
+  when: _kconfig.stat.exists
   
 - block:
   - name: Initialize k8s master
@@ -28,7 +32,8 @@
     run_once: true
     register: _kinit
 
-  - ansible.builtin.debug:
+  - name: Show kubeadm init output
+    ansible.builtin.debug:
       var: _kinit.stdout_lines
     run_once: true
   when: not _kconfig.stat.exists

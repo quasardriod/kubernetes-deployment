@@ -1,0 +1,11 @@
+---
+
+- hosts: all
+  gather_facts: true
+  become: yes
+
+  roles:
+  - role: download-kubeconfig
+    when: inventory_hostname in groups.master
+    
+  - role: add-worker
