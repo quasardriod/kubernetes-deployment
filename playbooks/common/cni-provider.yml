@@ -7,6 +7,20 @@
   vars:
     cni_provider: calico
 
-  roles:
-  - role: cni/calico
+  tasks:
+  - name: Install Calico
+    ansible.builtin.include_role:
+      name: cni/calico
+      tasks_from: main.yml
     when: cni_provider == 'calico'
+    tags:
+      - calico
+
+  - name: Install Calicoctl
+    ansible.builtin.include_role:
+      name: cni/calico
+      tasks_from: calicoctl.yml
+    when: cni_provider == 'calico'
+    tags:
+      - calicoctl
+      - calico
