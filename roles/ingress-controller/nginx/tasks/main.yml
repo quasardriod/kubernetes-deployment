@@ -1,0 +1,21 @@
+---
+
+- name: Download Nginx Ingress controller manifest
+  ansible.builtin.get_url:
+    url: "{{nginx_ingress_manifest}}"
+    dest: /root/nginx-ingress-controller.yaml
+    mode: 0644
+
+- name: Install Nginx Ingress controller
+  ansible.builtin.command: kubectl apply -f /root/nginx-ingress-controller.yaml
+  environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Wait for ingress controller to come up
+  ansible.builtin.shell: |
+      kubectl wait --namespace ingress-nginx \
+        --for=condition=ready pod \
+        --selector=app.kubernetes.io/component=controller \
+        --timeout=120s
+  environment:
+      KUBECONFIG: /etc/kubernetes/admin.conf

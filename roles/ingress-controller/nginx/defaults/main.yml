@@ -1,0 +1,2 @@
+nginx_ingress_version: 'v1.7.0'
+nginx_ingress_manifest: "https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{nginx_ingress_version}}/deploy/static/provider/cloud/deploy.yaml"

@@ -1,0 +1,12 @@
+---
+
+- hosts: master
+  gather_facts: true
+  become: yes
+
+  vars:
+    ingress_provider: nginx
+
+  roles:
+  - role: ingress-controller/nginx
+    when: ingress_provider == 'nginx'
