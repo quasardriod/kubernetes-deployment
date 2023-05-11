@@ -1,6 +1,0 @@
----
-
-- name: Deploy Nginx WebServer on k8s
-  ansible.builtin.command: kubectl apply -f {{role_path}}/files/nginx.yml
-  environment:
-    KUBECONFIG: "{{LOCAL_KUBECONFIG}}"
