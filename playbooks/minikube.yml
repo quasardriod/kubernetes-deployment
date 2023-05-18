@@ -8,6 +8,7 @@
   - role: container-runtime
 
 - ansible.builtin.import_playbook: common/install-kubectl.yml
+- ansible.builtin.import_playbook: common/install-helm.yml
 
 - hosts: all
   gather_facts: true
@@ -20,5 +21,7 @@
     cni_provider: calico
     KUBECONFIG: "/home/{{ansible_user}}/.kube/config"
     become_root: no
+
+
   
 
