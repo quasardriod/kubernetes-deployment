@@ -3,6 +3,7 @@
 - [Kubernetes Deployment](#kubernetes-deployment)
   - [Overview](#overview)
   - [Setup Hosts](#setup-hosts)
+  - [Install Minikube](#install-minikube)
   - [Single Node Kubeadm Deployment](#single-node-kubeadm-deployment)
   - [Download kubeconfig on localhost](#download-kubeconfig-on-localhost)
   - [Install Applications](#install-applications)
@@ -17,6 +18,14 @@ Common OS configuration and install pre-requisites packages. This playbook is in
 ```bash
 INVENTORY=single-node-k8s-hosts
 $ ansible-playbook -i inventory/$INVENTORY playbooks/setup-hosts.yml
+```
+
+## Install Minikube
+Minikube will be installed with Calico.
+
+```bash
+INVENTORY=minikube
+$ ansible-playbook -i inventory/$INVENTORY playbooks/minikube.yml
 ```
 
 ## Single Node Kubeadm Deployment

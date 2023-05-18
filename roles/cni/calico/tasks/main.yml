@@ -1,12 +1,18 @@
 ---
 
+- ansible.builtin.debug:
+    var: KUBECONFIG
+    
 - name: Check Calico state
   ansible.builtin.script: calico-healthcheck.sh
   environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
+    KUBECONFIG: "{{KUBECONFIG}}"
   args:
     executable: /bin/bash
   register: _chealth
+
+- ansible.builtin.debug:
+    var: _chealth.stdout|trim
 
 - ansible.builtin.debug:
     msg: "Calico is healthy"
@@ -20,11 +26,11 @@
   - name: Download Calico Manifest {{calico_version}}
     ansible.builtin.get_url:
       url: "{{calico_manifest}}"
-      dest: /root/calico.yaml
+      dest: /var/tmp/calico.yaml
       mode: 0644
 
   - name: Apply Calico config
-    ansible.builtin.command: kubectl apply -f /root/calico.yaml
+    ansible.builtin.command: kubectl apply -f /var/tmp/calico.yaml
     environment:
       KUBECONFIG: "{{KUBECONFIG}}"
 
@@ -32,7 +38,7 @@
     ansible.builtin.pause:
       echo: yes
       minutes: 10
-  when: _chealth.stdout is match('calico not found')
+  when: _chealth.stdout|trim is match('calico not found')
 
 - name: Do lookup for non-running pods
   ansible.builtin.include_role:

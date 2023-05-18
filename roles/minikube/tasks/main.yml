@@ -1,0 +1,42 @@
+---
+
+- name: Add {{ansible_user}} in group docker
+  ansible.builtin.user:
+    name: '{{ansible_user}}'
+    groups: docker
+    append: yes
+
+- name: Activate group
+  ansible.builtin.shell: newgrp docker &
+  become: false
+
+- name: Make sure docker and containerd are running
+  ansible.builtin.systemd:
+    name: "{{item}}"
+    state: started
+  with_items:
+    - docker
+    - containerd
+
+- name: Get stat of /usr/local/bin/minikube
+  ansible.builtin.stat:
+    path: /usr/local/bin/minikube
+  register: _mkube_file
+
+- name: Download minikube
+  ansible.builtin.get_url:
+    url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+    dest: /usr/local/bin/minikube
+    mode: '0755'
+  when: not _mkube_file.stat.exists
+
+- name: Check minikube version
+  ansible.builtin.shell: minikube version
+  register: _mkube_version
+
+- ansible.builtin.debug:
+    var: _mkube_version.stdout_lines
+
+- name: Install minikube
+  ansible.builtin.command: minikube start
+  become: false
