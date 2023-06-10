@@ -5,6 +5,7 @@
     path: "{{lookup('env', 'HOME')}}/.kube"
     state: directory
   delegate_to: localhost
+  become: false
 
 - name: Fetch kubeconfig from master to localhost
   ansible.builtin.fetch:

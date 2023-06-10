@@ -1,6 +1,7 @@
 ---
 
-- hosts: all:!worker
+- name: Run playbook cni-provider
+  hosts: all:!worker
   gather_facts: true
   become: "{{become_root|default('yes')}}"
 

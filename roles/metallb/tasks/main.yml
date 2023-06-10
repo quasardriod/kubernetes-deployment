@@ -1,0 +1,6 @@
+---
+
+- name: Install MetalLB using manifest
+  ansible.builtin.command: kubectl apply -f "{{ metallb_manifest }}"
+  environment:
+    KUBECONFIG: "{{KUBECONFIG}}"

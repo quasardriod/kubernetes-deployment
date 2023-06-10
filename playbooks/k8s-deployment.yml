@@ -7,6 +7,3 @@
   vars:
     cni_provider: calico
 - ansible.builtin.import_playbook: common/add-worker.yml
-- ansible.builtin.import_playbook: common/ingress-controller.yml
-  vars:
-    ingress_provider: nginx
