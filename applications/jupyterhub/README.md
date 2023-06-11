@@ -3,20 +3,19 @@
 **Pre-requisites:**
 - helm
 
-## Install JupyterHub
-1. Add jhub helm repo
+### 1. Add jhub helm repo
 
 ```bash
 $ helm repo add jupyterhub https://jupyterhub.github.io/helm-chart/
 $ helm repo update
 ```
 
-2. Export jupyterhub default config(Optional)
+### 2. Export jupyterhub default config(Optional)
 ```bash
 $ helm show values jupyterhub/jupyterhub > exported-jhub-config.yaml
 ```
 
-3. By default, jhub uses default storage class. Set storage class param in export config to use a custom class.
+### 3. By default, jhub uses default storage class. Set storage class param in export config to use a custom class.
 
 In below example, `localnfs` is a [Ganesha NFS Provisioner](../../roles/nfs-ganesha-server-and-external-provisioner/README.md)
 
@@ -30,7 +29,7 @@ Use `exported-jhub-config.yaml` file available in repo to deploy jhub, it has a 
 - https://discourse.jupyter.org/t/singleuser-pods-stuck-in-pending/6349/4
 
 
-4. Install jupyterhub
+### 4. Install jupyterhub
 
 ```bash
 helm upgrade --cleanup-on-fail \
@@ -41,7 +40,7 @@ helm upgrade --cleanup-on-fail \
   --values exported-jhub-config.yaml
 ```
 
-5. Post-installation checklist (Output from above command)
+### 5. Post-installation checklist (Output from above command)
 
 - Verify that created Pods enter a Running state:
 ```bash
@@ -79,7 +78,8 @@ kubectl --namespace=default port-forward service/proxy-public 8080:http
 
 Try insecure HTTP access: http://localhost:8080
 
-6. Access application from your desktop
+
+### 6. Access application from your desktop
 If you do not have LoadBalancer configured in your cluster, you may see `EXTERNAL-IP` in `pending` state for `service/proxy-public`, as in below example
 
 ```
