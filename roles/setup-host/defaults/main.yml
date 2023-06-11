@@ -1,9 +1,10 @@
 common_packages:
-  - ca-certificates
-  - make
-  - curl
-  - bc
-  - python3-pip
-  - dnsutils
-  - lvm2
-  - gnupg
+- ca-certificates
+- make
+- curl
+- bc
+- python3-pip
+- dnsutils
+- lvm2
+- gnupg
+- nfs-common

@@ -5,7 +5,9 @@
   - [Setup Hosts](#setup-hosts)
   - [Install Minikube](#install-minikube)
   - [Deploy K8s cluster using kubeadm](#deploy-k8s-cluster-using-kubeadm)
+  - [Install NFS Provisioner](#install-nfs-provisioner)
   - [Install Applications](#install-applications)
+      - [Juypyterhub](#juypyterhub)
 
 ## Overview
 Supported OS:
@@ -20,5 +22,11 @@ $ ansible-playbook -i inventory/$INVENTORY playbooks/setup-hosts.yml
 ```
 
 ## [Install Minikube](./docs/minikube.md)
+
 ## [Deploy K8s cluster using kubeadm](./docs/kubeadm.md)
+
+## [Install NFS Provisioner](./roles/nfs-ganesha-server-and-external-provisioner/README.md)
+
 ## [Install Applications](./applications/README.md)
+
+#### [Juypyterhub](./applications/jupyterhub/README.md)
