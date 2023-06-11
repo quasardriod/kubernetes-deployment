@@ -16,13 +16,9 @@ $ helm repo update
 $ helm show values jupyterhub/jupyterhub > exported-jhub-config.yaml
 ```
 
-3. By default, jhub will try to use default storage class. Set storage class param in export config to use a custom class.
+3. By default, jhub uses default storage class. Set storage class param in export config to use a custom class.
 
-In below example, `localnfs` sc is using [Ganesha NFS Provisioner](../../roles/nfs-ganesha-server-and-external-provisioner/README.md)
-
-Use `exported-jhub-config.yaml` file available in repo to deploy jhub, it has a few bug fixes:
-- https://discourse.jupyter.org/t/singleuser-pods-stuck-in-pending/6349/4
-
+In below example, `localnfs` is a [Ganesha NFS Provisioner](../../roles/nfs-ganesha-server-and-external-provisioner/README.md)
 
 ```bash
 $ grep  storageClass exported-jhub-config.yaml 
@@ -30,7 +26,11 @@ $ grep  storageClass exported-jhub-config.yaml
       storageClass: localnfs
 ```
 
-1. Install jupyterhub
+Use `exported-jhub-config.yaml` file available in repo to deploy jhub, it has a few bug fixes:
+- https://discourse.jupyter.org/t/singleuser-pods-stuck-in-pending/6349/4
+
+
+4. Install jupyterhub
 
 ```bash
 helm upgrade --cleanup-on-fail \
@@ -40,7 +40,6 @@ helm upgrade --cleanup-on-fail \
   --version=2.0.0 \
   --values exported-jhub-config.yaml
 ```
-
 
 5. Post-installation checklist (Output from above command)
 
@@ -90,7 +89,7 @@ service/proxy-public      LoadBalancer   10.107.70.46    <pending>     80:32496/
 Run below command to port-forward for `service/proxy-public`.
 
 ```bash
-$ kubectl --namespace=default port-forward --address 0.0.0.0 service/proxy-public 8080:http
+$ kubectl --namespace=jhub port-forward --address 0.0.0.0 service/proxy-public 8080:http
 ```
 
 Access `http://<host-ip>:8080` from browser to access juypterhub from desktop. `host-ip` is the IP of the machine where you run `kubectl port-forward`.
