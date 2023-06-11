@@ -11,7 +11,7 @@ $ helm repo add jupyterhub https://jupyterhub.github.io/helm-chart/
 $ helm repo update
 ```
 
-2. Export jupyterhub default config
+2. Export jupyterhub default config(Optional)
 ```bash
 $ helm show values jupyterhub/jupyterhub > exported-jhub-config.yaml
 ```
@@ -20,18 +20,22 @@ $ helm show values jupyterhub/jupyterhub > exported-jhub-config.yaml
 
 In below example, `localnfs` sc is using [Ganesha NFS Provisioner](../../roles/nfs-ganesha-server-and-external-provisioner/README.md)
 
+Use `exported-jhub-config.yaml` file available in repo to deploy jhub, it has a few bug fixes:
+- https://discourse.jupyter.org/t/singleuser-pods-stuck-in-pending/6349/4
+
+
 ```bash
 $ grep  storageClass exported-jhub-config.yaml 
       storageClassName: localnfs
       storageClass: localnfs
 ```
 
-4. Install jupyterhub
+1. Install jupyterhub
 
 ```bash
 helm upgrade --cleanup-on-fail \
-  --install helm-default jupyterhub/jupyterhub \
-  --namespace default \
+  --install helm-jhub jupyterhub/jupyterhub \
+  --namespace jhub \
   --create-namespace \
   --version=2.0.0 \
   --values exported-jhub-config.yaml
