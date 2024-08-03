@@ -1,8 +1,7 @@
----
 
 - hosts: all
   gather_facts: true
-  become: true
+  # become: true
 
   roles:
   - role: setup-host

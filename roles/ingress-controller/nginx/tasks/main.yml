@@ -1,20 +1,19 @@
----
 
 - name: Download Nginx Ingress controller manifest
   ansible.builtin.get_url:
-    url: "{{nginx_ingress_manifest[expose_method]}}"
+    url: "{{ nginx_ingress_manifest[expose_method] }}"
     dest: /root/nginx-ingress-controller.yaml
     mode: 0644
 
 - name: Install Nginx Ingress controller
   ansible.builtin.command: kubectl apply -f /root/nginx-ingress-controller.yaml
   environment:
-      KUBECONFIG: "{{KUBECONFIG}}"
+    KUBECONFIG: "{{ KUBECONFIG }}"
 
 - name: Get IngressClass
   ansible.builtin.shell: kubectl -n ingress-nginx get ingressclasses|egrep -v NAME|awk '{print $1}'
   environment:
-      KUBECONFIG: "{{KUBECONFIG}}"
+    KUBECONFIG: "{{KUBECONFIG}}"
   register: _ingressclass_name
 
 - name: Template out IngressClass manifest
@@ -26,14 +25,14 @@
 - name: Apply IngressClass manifest
   ansible.builtin.command: kubectl apply -f /root/ingressclass.yaml
   environment:
-      KUBECONFIG: "{{KUBECONFIG}}"
-  
+    KUBECONFIG: "{{ KUBECONFIG }}"
+
 - name: Wait for ingress controller to come up
   ansible.builtin.shell: |
-      kubectl wait --namespace ingress-nginx \
-        --for=condition=ready pod \
-        --selector=app.kubernetes.io/component=controller \
-        --timeout=120s
+    kubectl wait --namespace ingress-nginx \
+      --for=condition=ready pod \
+      --selector=app.kubernetes.io/component=controller \
+      --timeout=120s
   environment:
-      KUBECONFIG: "{{KUBECONFIG}}"
+    KUBECONFIG: "{{KUBECONFIG}}"
 

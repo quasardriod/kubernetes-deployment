@@ -1,4 +1,3 @@
----
 
 - name: Create .kube
   ansible.builtin.file:
@@ -8,7 +7,7 @@
 
 - name: Fetch kubeconfig from master to localhost
   ansible.builtin.fetch:
-    src: "{{KUBECONFIG}}"
-    dest: "{{LOCAL_KUBECONFIG}}"
+    src: "{{ KUBECONFIG }}"
+    dest: "{{ LOCAL_KUBECONFIG }}"
     flat: yes
     mode: 0644

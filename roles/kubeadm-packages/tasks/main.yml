@@ -1,39 +1,51 @@
----
+- name: Run on Ubuntu systems
+  block:
+  - name: Install google cloud public signing key
+    ansible.builtin.shell: curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 
-- name: Install google cloud public signing key
-  ansible.builtin.shell: curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+  - name: Add kubernetes apt key
+    ansible.builtin.shell: echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+
+  - name: Install Kubernetes packages on Ubuntu
+    ansible.builtin.apt:
+      name: "{{ k8s_packages[ansible_os_family] }}"
+      state: latest
+      update_cache: yes
+
+  - name: Fixed kube version
+    ansible.builtin.command: apt-mark hold kubelet kubeadm kubectl
   when: ansible_distribution == "Ubuntu"
 
-- name: Add kubernetes apt key
-  ansible.builtin.shell: echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
-  when: ansible_distribution == "Ubuntu"
+- name: Template out kubernetes repo on RedHat Family systems
+  ansible.builtin.template:
+    src: kubernetes.repo.j2
+    dest: /etc/yum.repos.d/kubernetes.repo
+    mode: 0644
+    owner: root
+    group: root
+  when: ansible_os_family == "RedHat"
 
-- name: Install Packages on Ubuntu
-  ansible.builtin.apt:
-    name:
-      - kubelet
-      - kubeadm 
-      - kubectl
+- name: Install Kubernetes packages on RedHat Family systems
+  ansible.builtin.dnf:
+    name: "{{ k8s_packages[ansible_os_family] }}"
     state: latest
     update_cache: yes
-  when: ansible_distribution == "Ubuntu"
+    disable_excludes: kubernetes
+  when: ansible_os_family == "RedHat"
 
-- name: Fixed kube version
-  ansible.builtin.command: apt-mark hold kubelet kubeadm kubectl
-  when: ansible_distribution == "Ubuntu"
-
-- name: Show k8s images
+- name: Get k8s images
   ansible.builtin.command: kubeadm config images list
   when: inventory_hostname in groups.master
   register: _k8s_images
-  run_once: true
+  # run_once: true
 
-- ansible.builtin.debug:
+- name: Show k8s images
+  ansible.builtin.debug:
     var: _k8s_images.stdout_lines
   when: inventory_hostname in groups.master
-  run_once: true
+  # run_once: true
 
 - name: Pull k8s images
   ansible.builtin.command: kubeadm config images pull
   when: inventory_hostname in groups.master
-  run_once: true
+  # run_once: true

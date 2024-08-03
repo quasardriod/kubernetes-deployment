@@ -1,11 +1,47 @@
----
- 
+
+# Containerd packages are provided by Docker
+# https://github.com/containerd/containerd/blob/main/docs/getting-started.md: Option 2
+
+- name: Stat /etc/apt/keyrings/docker.gpg
+  ansible.builtin.stat:
+    path: /etc/apt/keyrings/docker.gpg
+  register: _docker_gpg
+  when: ansible_distribution == "Ubuntu"
+
+- name: Install Docker gpgkey
+  ansible.builtin.shell: |
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    chmod a+r /etc/apt/keyrings/docker.gpg
+  when:
+  - ansible_distribution == "Ubuntu"
+  - not _docker_gpg.stat.exists
+
+- name: Stat /etc/apt/sources.list.d/docker.list
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list.d/docker.list
+  register: _docker_repo
+  when: ansible_distribution == "Ubuntu"
+
+- name: Setup Repo in Ubuntu
+  ansible.builtin.shell: |
+    echo \
+    "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  when:
+  - ansible_distribution == "Ubuntu"
+  - not _docker_repo.stat.exists
+
+- name: Install docker repo on RedHat Family OS
+  ansible.builtin.command: yum-config-manager --add-repo {{ docker_repo[ansible_os_family] }}
+  when: ansible_os_family == "RedHat"
+
 - name: Install Containerd packages
-  ansible.builtin.apt:
-    name: "{{containerd_packages}}"
+  ansible.builtin.package:
+    name: "{{ containerd_packages[ansible_os_family] }}"
     update_cache: yes
     state: latest
-  when: ansible_distribution == "Ubuntu"
 
 #- name: Generate containerd config.toml
 #  ansible.builtin.command: containerd config default > /etc/containerd/config.toml
@@ -13,11 +49,11 @@
 
 - name: Copy containerd config.toml
   ansible.builtin.copy:
-   src: containerd/config.toml
-   dest: /etc/containerd/
-   mode: 0644
-   owner: root
-   group: root
+    src: containerd/config.toml
+    dest: /etc/containerd/
+    mode: 0644
+    owner: root
+    group: root
   register: _containerd_config
 
 - name: Restart containerd

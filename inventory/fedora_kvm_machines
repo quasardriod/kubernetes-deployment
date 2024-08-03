@@ -1,0 +1,10 @@
+[master]
+k8s-m01 ansible_host=192.168.64.65
+
+[worker]
+k8s-w01 ansible_host=192.168.64.227
+
+[all:vars]
+ansible_user=ubuntu
+ansible_password=redhat
+ansible_become_password=redhat

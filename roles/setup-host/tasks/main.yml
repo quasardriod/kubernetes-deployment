@@ -1,40 +1,9 @@
----
 
-- name: Stat /etc/apt/keyrings/docker.gpg
-  ansible.builtin.stat:
-    path: /etc/apt/keyrings/docker.gpg
-  register: _docker_gpg
-
-- name: Install Docker gpgkey
-  ansible.builtin.shell: |
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    chmod a+r /etc/apt/keyrings/docker.gpg
-  when: 
-    - ansible_distribution == "Ubuntu"
-    - not _docker_gpg.stat.exists
-
-- name: Stat /etc/apt/sources.list.d/docker.list
-  ansible.builtin.stat:
-    path: /etc/apt/sources.list.d/docker.list
-  register: _docker_repo
-
-- name: Setup Repo in Ubuntu
-  ansible.builtin.shell: |
-    echo \
-    "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-    "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  when: 
-    - ansible_distribution == "Ubuntu"
-    - not _docker_repo.stat.exists
-
-- name: Install Common Packages on Ubuntu
-  ansible.builtin.apt:
-    name: "{{common_packages}}"
+- name: Install Common Packages
+  ansible.builtin.package:
+    name: "{{ common_packages[ansible_os_family] }}"
     state: latest
     update_cache: yes
-  when: ansible_distribution == "Ubuntu"
 
 - name: Disable swap
   ansible.builtin.command: swapoff -a
@@ -44,3 +13,43 @@
     path: /etc/fstab
     regexp: 'swap'
     state: absent
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+    use: systemd
+
+- name: Prepare hosts entry
+  ansible.builtin.shell: |
+    for h in {{ ansible_play_hosts|join(' ') }};do
+      ip=$(ansible-inventory -i {{ inventory_file }} --host $h|jq .ansible_host|sed -e 's/\"//g')
+      echo "$ip $h"
+    done
+  delegate_to: localhost
+  register: _hosts_entry
+  run_once: true
+
+- name: Show hosts entry
+  ansible.builtin.debug:
+    var: _hosts_entry.stdout_lines
+  run_once: true
+
+- name: Add _hosts_entry in /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^{{ item.split(' ')[0] }}"
+    line: '{{ item }}'
+  with_items: "{{ _hosts_entry.stdout_lines }}"
+
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+# Red Hat-based distributions -> Set SELinux to permissive mode:
+- name: Set selinux to premission mode
+  ansible.builtin.command: setenforce 0
+  when: ansible_os_family == "RedHat"
+
+- name: Set permissive in /etc/selinux/config
+  ansible.builtin.lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX'
+    line: 'SELINUX=permissive'
+  when: ansible_os_family == "RedHat"

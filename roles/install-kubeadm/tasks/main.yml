@@ -1,4 +1,3 @@
----
 
 - name: Check if /etc/kubernetes/admin.conf already exists
   ansible.builtin.stat:
@@ -9,7 +8,7 @@
   - name: Check state of the cluster
     ansible.builtin.shell: kubectl cluster-info
     environment:
-      KUBECONFIG: "{{KUBECONFIG}}"
+      KUBECONFIG: "{{ KUBECONFIG }}"
     register: _kstatus
 
   - name: show k8s cluter-info
@@ -20,12 +19,10 @@
     ansible.builtin.pause:
       echo: yes
       minutes: 15
-      prompt: "\n
-        Review cluster status in above output. \n
-        If it's looking healthy Continue, else Abort and troubleshoot problem"
+      prompt: "\n Review cluster status in above output. \n If it's looking healthy Continue, else Abort and troubleshoot problem"
     when: _kstatus.rc == 0
   when: _kconfig.stat.exists
-  
+
 - block:
   - name: Initialize k8s master
     ansible.builtin.command: kubeadm init
@@ -43,16 +40,16 @@
     path: /etc/kubernetes/admin.conf
     mode: 0644
 
-- name: Create .kube in {{ansible_user}} home
+- name: Create .kube in {{ ansible_user }} home
   ansible.builtin.file:
-    path: "/home/{{ansible_user}}/.kube"
+    path: "{{ ansible_env['HOME'] }}/.kube"
     state: directory
   become: false
 
 - name: Copy /etc/kubernetes/admin.conf in .kube
   ansible.builtin.copy:
     src: /etc/kubernetes/admin.conf
-    dest: "/home/{{ansible_user}}/.kube/config"
+    dest: "{{ ansible_env['HOME'] }}/.kube/config"
     mode: 0644
     remote_src: true
   become: false

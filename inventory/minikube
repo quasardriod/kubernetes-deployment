@@ -1,6 +1,16 @@
-minikube ansible_host=192.168.10.53
+ubuntu:
+  hosts:
+    minikube: ansible_host=192.168.10.53
+  vars:
+    ansible_user: ubuntu
+    ansible_password: redhat
+    ansible_become_password: redhat
 
-[all:vars]
-ansible_user=ubuntu
-ansible_password=redhat
-ansible_become_password=redhat
+
+rocky:
+  hosts:
+    rocky-minikube:
+      ansible_host: 192.168.10.53
+  vars:
+    ansible_user: root
+    ansible_ssh_private_key: ~/.ssh/id_ecdsa

@@ -1,0 +1,28 @@
+# https://docs.tigera.io/calico/latest/getting-started/kubernetes/self-managed-onprem/onpremises#install-calico
+
+- name: Download Calico operator config for {{ calico_version }}
+  ansible.builtin.get_url:
+    url: "{{ calico_install_method['operator']['config']['url'] }}"
+    dest: "/var/tmp/{{ calico_install_method['operator']['config']['local_file'] }}"
+    mode: 0644
+
+- name: Download Calico custom_resources manifest for {{ calico_version }}
+  ansible.builtin.get_url:
+    url: "{{ calico_install_method['operator']['custom_resource']['url'] }}"
+    dest: "/var/tmp/{{ calico_install_method['operator']['custom_resource']['local_file'] }}"
+    mode: 0644
+
+- name: Apply Calico operator config
+  ansible.builtin.command: kubectl create -f /var/tmp/{{ calico_install_method['operator']['config']['local_file'] }}
+  environment:
+    KUBECONFIG: "{{ KUBECONFIG }}"
+
+- name: Apply Calico custom_resource manifest
+  ansible.builtin.command: kubectl create -f /var/tmp/{{ calico_install_method['operator']['custom_resource']['local_file'] }}
+  environment:
+    KUBECONFIG: "{{ KUBECONFIG }}"
+
+- name: Wait for calico to come up
+  ansible.builtin.pause:
+    echo: yes
+    minutes: 5

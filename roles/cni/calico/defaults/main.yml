@@ -1,2 +1,20 @@
-calico_version: 'v3.25'
+# calico_version: 'v3.25'
+calico_version: 'v3.28.1'
 calico_manifest: "https://docs.projectcalico.org/archive/{{calico_version}}/manifests/calico.yaml"
+
+calico_install_method:
+  operator:
+    config:
+      url: "https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/tigera-operator.yaml"
+      local_file: "tigera-operator.yaml"
+    custom_resource:
+      url: "https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/custom-resources.yaml"
+      local_file: "custom-resources.yaml"
+  manifest:
+    config:
+      url: "https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/calico.yaml"
+      local_file: calico.yaml
+
+calico_install_type: operator # operator or manifest
+
+calicoctl_url: "https://github.com/projectcalico/calico/releases/download/{{ calico_version }}/calicoctl-linux-amd64"

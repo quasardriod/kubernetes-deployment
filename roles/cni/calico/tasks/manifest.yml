@@ -1,0 +1,17 @@
+# https://docs.tigera.io/calico/latest/getting-started/kubernetes/self-managed-onprem/onpremises#install-calico
+
+- name: Download Calico manifest config for {{ calico_version }}
+  ansible.builtin.get_url:
+    url: "{{ calico_install_method['manifest']['config']['url'] }}"
+    dest: "/var/tmp/{{ calico_install_method['manifest']['config']['local_file'] }}"
+    mode: 0644
+
+- name: Apply Calico manifest config
+  ansible.builtin.command: kubectl apply -f /var/tmp/{{ calico_install_method['manifest']['config']['local_file'] }}
+  environment:
+    KUBECONFIG: "{{ KUBECONFIG }}"
+
+- name: Wait for calico to come up
+  ansible.builtin.pause:
+    echo: yes
+    minutes: 5

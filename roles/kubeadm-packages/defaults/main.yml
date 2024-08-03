@@ -1,0 +1,7 @@
+k8s_version: '1.30'
+k8s_packages:
+  RedHat:
+  - kubelet
+  - kubeadm
+  - kubectl
+
