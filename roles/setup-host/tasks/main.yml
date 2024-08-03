@@ -43,7 +43,7 @@
 
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 # Red Hat-based distributions -> Set SELinux to permissive mode:
-- name: Set selinux to premission mode
+- name: Set selinux to permission mode
   ansible.builtin.command: setenforce 0
   when: ansible_os_family == "RedHat"
 

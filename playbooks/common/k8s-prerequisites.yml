@@ -1,5 +1,6 @@
 
-- hosts: all
+- name: Run k8s-prerequisties playbook
+  hosts: all
   gather_facts: true
   # become: true
 
