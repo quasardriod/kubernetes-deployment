@@ -44,7 +44,7 @@
   ansible.builtin.file:
     path: "{{ ansible_env['HOME'] }}/.kube"
     state: directory
-  become: false
+    # become: false
 
 - name: Copy /etc/kubernetes/admin.conf in .kube
   ansible.builtin.copy:
@@ -52,7 +52,7 @@
     dest: "{{ ansible_env['HOME'] }}/.kube/config"
     mode: 0644
     remote_src: true
-  become: false
+    # become: false
 
 - name: Do lookup for non-running pods
   ansible.builtin.include_role:

@@ -14,9 +14,13 @@ function tools(){
         sudo install kubectl /usr/local/bin
     fi
 
+    if [ ! -f /usr/bin/kubectl ];then
+        sudo ln -s /usr/local/bin/kubectl /usr/bin/kubectl
+    fi
 }
+
 tools
-exit 0
+
 [ -z $1 ] && error "\nERROR: Provide inventory file in 1st argument\n" && exit 1
 if [ ! -f $1 ];then
     error "\nERROR: Inventory file: $1 not found\n"
