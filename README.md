@@ -1,28 +1,10 @@
-# Kubernetes Deployment
-
-- [Kubernetes Deployment](#kubernetes-deployment)
-  - [Overview](#overview)
-  - [Install Minikube](#install-minikube)
-  - [Deploy K8s cluster using kubeadm](#deploy-k8s-cluster-using-kubeadm)
-  - [Install Applications](#install-applications)
-  - [Generate Cluster config for other users](#generate-cluster-config-for-other-users)
-
 ## Overview
 Supported OS:
-- Ubuntu 22.04
 - CentOS 9
-  
-<!-- ## Setup Hosts
-Common OS configuration and install pre-requisites packages. This playbook is included in all kube deployment playbooks, so you can **avoid** manual execution of this playbook.
 
-```bash
-INVENTORY=single-node-k8s-hosts
-$ ansible-playbook -i inventory/$INVENTORY playbooks/setup-hosts.yml
-``` -->
-
+## [Install Applications](./applications/README.md)
 ## [Install Minikube](./docs/minikube.md)
 ## [Deploy K8s cluster using kubeadm](./docs/kubeadm.md)
-## [Install Applications](./applications/README.md)
 
 ## Generate Cluster config for other users
 Perform following steps from master node. Review [Certificate Management with kubeadm](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/) for detailed information.
