@@ -14,7 +14,7 @@ Following list illustrate the detailed information of ansible playbook execution
 - [Install Ingress Controller](./playbooks/common/ingress-controller.yml)
 
 ## Install Kubernetes Cluster using Kubeadm
-If running k8s nodes in Openstack Cloud:
+**NOTE:** Follow below steps when running k8s nodes in Openstack Cloud:
   - User must attach floating ip to k8s master before starting k8s deployment.
   - Define `master_floating_ip` var in k8s master node group in inventory file.
 ```
@@ -28,3 +28,7 @@ master_floating_ip: '0.0.0.0'
 ./run.sh inventory/<inventory_file>
 ```
 
+#### Access kubernetes cluster from external network
+Following these steps when k8s cluster running in OpenStack Cloud:
+- Copy `/etc/kubernetes/admin.conf` from kube master to the client in `~/.kube/config`
+- Change `server` param IP/hostname to `floating IP` of the kube master in `~/.kube/config`
