@@ -1,0 +1,9 @@
+# Configure haproxy loadbalancer for kube master
+
+- hosts: 'all:!worker'
+  gather_facts: true
+
+  tasks:
+  - name: Run role kubeadm-lb
+    ansible.builtin.include_role:
+      name: kubeadm-lb

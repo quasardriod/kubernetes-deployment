@@ -1,0 +1,71 @@
+- name: Install haproxy
+  ansible.builtin.package:
+    name: haproxy
+    state: latest
+  when: inventory_hostname in groups.lb
+
+- name: Prepare hosts entry
+  ansible.builtin.shell: |
+    for h in {{ ansible_play_hosts|join(' ') }};do
+      ip=$(ansible-inventory -i {{ inventory_file }} --host $h|jq .ansible_host|sed -e 's/\"//g')
+      echo "$ip $h"
+    done
+  delegate_to: localhost
+  register: _hosts_entry
+  run_once: true
+
+- name: Show hosts entry
+  ansible.builtin.debug:
+    var: _hosts_entry.stdout_lines
+  run_once: true
+
+- name: Add _hosts_entry in /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^{{ item.split(' ')[0] }}"
+    line: '{{ item }}'
+  with_items: "{{ _hosts_entry.stdout_lines }}"
+  when: inventory_hostname in groups.lb
+
+- name: Prepare master properties
+  ansible.builtin.copy:
+    content: "k8s_master: \n  name: \"{{ inventory_hostname }}\"\n  ip: \"{{ ansible_host }}\"\n"
+    dest: /tmp/master.yml
+    mode: 0644
+  delegate_to: localhost
+  when: inventory_hostname in groups.master
+
+- name: Include vars from /tmp/master.yml
+  ansible.builtin.include_vars:
+    file: /tmp/master.yml
+
+- name: Get stat of original haproxy config
+  ansible.builtin.stat:
+    path: /etc/haproxy/haproxy-orig.cfg
+  register: orig_haproxy
+  when: inventory_hostname in groups.lb
+
+- name: Take backup
+  ansible.builtin.copy:
+    src: /etc/haproxy/haproxy.cfg
+    dest: /etc/haproxy/haproxy-orig.cfg
+    remote_src: yes
+    mode: 0644
+  when:
+  - inventory_hostname in groups.lb
+  - not orig_haproxy.stat.exists
+
+- name: Template out haproxy config
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    mode: 0644
+  notify: restart_haproxy
+  when: inventory_hostname in groups.lb
+
+- name: Ensure haproxy is started
+  ansible.builtin.systemd:
+    name: haproxy
+    state: started
+    enabled: yes
+  when: inventory_hostname in groups.lb

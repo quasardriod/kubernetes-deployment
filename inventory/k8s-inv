@@ -1,9 +1,12 @@
 [worker]
-k8s-w02 ansible_host=192.168.10.224 machine_type=worker
-k8s-w01 ansible_host=192.168.10.51 machine_type=worker
+k8s-w ansible_host=192.168.10.66 machine_type=worker
 [master]
-k8s-master ansible_host=192.168.10.139 machine_type=master
+k8s-master ansible_host=192.168.10.221 machine_type=master
+
+[lb]
+k8s-lb ansible_host=192.168.10.220 machine_type=haproxy
+
 [all:vars]
 ansible_user=root
-ansible_ssh_private_key_file=/home/sumit/.ssh/id_rsa.pub  
 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+ansible_ssh_private_key_file=~/.ssh/id_rsa

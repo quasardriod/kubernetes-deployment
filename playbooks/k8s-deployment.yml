@@ -9,3 +9,5 @@
 #- ansible.builtin.import_playbook: common/ingress-controller.yml
 #  vars:
 #    ingress_provider: nginx
+# - ansible.builtin.import_playbook: common/lb.yml
+#   when: groups.lb is defined
