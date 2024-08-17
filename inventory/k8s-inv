@@ -1,12 +1,14 @@
 [worker]
-k8s-w ansible_host=192.168.10.66 machine_type=worker
-[master]
-k8s-master ansible_host=192.168.10.221 machine_type=master
+k8s-w ansible_host=192.168.10.66
 
-[lb]
-k8s-lb ansible_host=192.168.10.220 machine_type=haproxy
+[master]
+k8s-master ansible_host=192.168.10.221
 
 [all:vars]
 ansible_user=root
 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[master:vars]
+# Set only when running k8s env in openstack
+master_floating_ip: '0.0.0.0'

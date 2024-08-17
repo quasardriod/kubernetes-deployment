@@ -5,3 +5,4 @@ calico_version: 'v3.28.1'
 # operator type is not tested fully, use manifest
 calico_install_type: manifest # operator or manifest
 nginx_ingress_version: 'v1.7.0'
+apiserver_extra_sans: '{{ inventory_hostname }}'

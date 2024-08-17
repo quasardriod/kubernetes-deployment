@@ -1,9 +1,9 @@
-# Single Node Kubeadm Deployment
+# Kubernetes Deployment using Kubeadm
 
 - Single node Kubeadm deployment consists one master and one or more worker nodes.
-- Setup inventory as given in [example](../inventory/single-node-k8s-hosts)
+- Setup inventory as given in [example](../inventory/k8s-inv)
 
-## [K8s Node Deployment](./playbooks/k8s-deployment.yml) runs following playbooks in sequence for complete deployment.
+## [K8s Nodes Deployment](./playbooks/k8s-deployment.yml) runs following playbooks in sequence for complete deployment.
 
 Following list illustrate the detailed information of ansible playbook execution to deploy kubernetes cluster.
 - [Install Common Packages and Host Setup](./playbooks/common/k8s-prerequisites.yml)
@@ -13,7 +13,17 @@ Following list illustrate the detailed information of ansible playbook execution
 - [Add Worker Node](./playbooks/common/add-worker.yml)
 - [Install Ingress Controller](./playbooks/common/ingress-controller.yml)
 
-#### Install Kubernetes Cluster using Kubeadm
+## Install Kubernetes Cluster using Kubeadm
+If running k8s nodes in Openstack Cloud:
+  - User must attach floating ip to k8s master before starting k8s deployment.
+  - Define `master_floating_ip` var in k8s master node group in inventory file.
+```
+[master:vars]
+# Set only when running k8s env in openstack
+master_floating_ip: '0.0.0.0'
+```
+
+#### Start Deployment
 ```bash
 ./run.sh inventory/<inventory_file>
 ```
