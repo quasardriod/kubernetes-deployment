@@ -1,4 +1,3 @@
----
 - name: Run playbook single-node-kubeadm
   hosts: master
   gather_facts: true

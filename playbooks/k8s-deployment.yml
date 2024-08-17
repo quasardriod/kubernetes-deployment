@@ -1,5 +1,5 @@
 
-- ansible.builtin.import_playbook: common/k8s-prerequisites.yml
+- ansible.builtin.import_playbook: common/k8s-prerequisite.yml
 - ansible.builtin.import_playbook: common/kubeadm-packages.yml
 - ansible.builtin.import_playbook: common/single-node-kubeadm.yml
 - ansible.builtin.import_playbook: common/cni-provider.yml

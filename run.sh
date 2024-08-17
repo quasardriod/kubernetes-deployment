@@ -2,16 +2,16 @@
 
 function tools(){
     if ! which git > /dev/null 2>&1;then
-        dnf install git curl -y -q
+        sudo dnf install git curl -y -q
     fi
 
     if ! which ansible > /dev/null 2>&1;then
-        dnf install ansible-core -y -q
+        sudo dnf install ansible-core -y -q
     fi
 
     if ! which kubectl > /dev/null 2>&1;then
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        sudo mv kubectl /usr/local/bin/
+        curl -LO -s "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        sudo install kubectl /usr/local/bin
     fi
 
 }

@@ -2,6 +2,7 @@
 - name: Run playbook kubeadm-packages
   hosts: all
   gather_facts: true
+  become: true
 
   roles:
   - role: kubeadm-packages
