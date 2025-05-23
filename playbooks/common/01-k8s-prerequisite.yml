@@ -1,8 +1,6 @@
-
 - name: Run k8s pre-requisite playbook
   hosts: all
   gather_facts: true
-  become: true
 
   roles:
   - role: setup-host

@@ -1,0 +1,35 @@
+---
+- name: Run playbook add-worker
+  hosts: all
+  gather_facts: true
+
+  tasks:
+  - name: add-worker | Get stat of LOCAL_KUBECONFIG
+    ansible.builtin.stat:
+      path: "{{ LOCAL_KUBECONFIG }}"
+    delegate_to: localhost
+    register: _local_kconfig
+    run_once: true
+
+  - name: add-worker | Run k8s reachability test
+    ansible.builtin.command: kubectl get nodes
+    register: _kstatus
+    environment:
+      KUBECONFIG: "{{ LOCAL_KUBECONFIG }}"
+    delegate_to: localhost
+    become: false
+    changed_when: false
+    ignore_errors: true
+    when: _local_kconfig.stat.exists
+    run_once: true
+
+  - name: add-worker | Call download-kubeconfig role to download kubeconfig
+    include_role:
+      name: download-kubeconfig
+    when:
+    - not _local_kconfig.stat.exists or (_kstatus is defined and _kstatus.rc != 0)
+    - inventory_hostname in groups.master
+
+  - name: add-worker | Include add-worker role
+    include_role:
+      name: add-worker

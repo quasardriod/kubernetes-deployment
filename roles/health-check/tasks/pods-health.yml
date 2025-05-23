@@ -1,14 +1,23 @@
+- name: health-check | Ensure namespace is provided
+  ansible.builtin.assert:
+    that:
+    - namespace is defined
+    - namespace != ''
+    fail_msg: "Namespace is not provided. Please provide a valid namespace."
+  tags:
+  - always
 
 # Lookup for pods not in running state
-- name: Filter Non Running pods
-  ansible.builtin.command: kubectl get pods -n {{ ns }} --field-selector=status.phase!=Running
+- name: health-check | Filter Non Running pods
+  ansible.builtin.command: kubectl get pods -n {{ namespace }} --field-selector=status.phase!=Running
   environment:
     KUBECONFIG: "{{ KUBECONFIG }}"
   register: _non_running_pods
   tags:
   - non-running-pods
 
-- ansible.builtin.debug:
+- name: health-check | Show non-running pods
+  ansible.builtin.debug:
     msg:
     - "Found following pods in non-running state"
     - "{{ _non_running_pods.stdout_lines }}"

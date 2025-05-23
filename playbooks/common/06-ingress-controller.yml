@@ -1,0 +1,10 @@
+---
+
+- hosts: master[0]
+  gather_facts: true
+
+  tasks:
+  - name: ingress-controller | Include ingress-controller role for provider {{ ingress_provider }}
+    ansible.builtin.include_role:
+      name: ingress-controller/nginx
+    when: ingress_provider == 'nginx'

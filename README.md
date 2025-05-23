@@ -1,10 +1,18 @@
+- [Overview](#overview)
+- [Deploy K8s cluster using kubeadm](#deploy-k8s-cluster-using-kubeadm)
+- [Minikube Deployment](#minikube-deployment)
+- [Generate Cluster config for other users](#generate-cluster-config-for-other-users)
+
 ## Overview
+
 Supported OS:
 - CentOS 9
 
-## [Install Applications](./applications/README.md)
-## [Install Minikube](./docs/minikube.md)
-## [Deploy K8s cluster using kubeadm](./docs/kubeadm.md)
+## Deploy K8s cluster using kubeadm
+Refer [Kubernetes Deployment using Kubeadm](./docs/kubeadm.md).
+
+## Minikube Deployment
+Visit [minikube](./docs/minikube.md)
 
 ## Generate Cluster config for other users
 Perform following steps from master node. Review [Certificate Management with kubeadm](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/) for detailed information.

@@ -1,8 +1,10 @@
 KUBECONFIG: /etc/kubernetes/admin.conf
 LOCAL_KUBECONFIG: "{{lookup('env', 'HOME')}}/.kube/config"
-k8s_version: '1.30'
-calico_version: 'v3.28.1'
-# operator type is not tested fully, use manifest
-calico_install_type: manifest # operator or manifest
+kubeadm_version: '1.32'
+
+# Calico is deployed using "manifest" method, operator is not tested yet
+# calico_install_type can be "operator" or "manifest", defined in roles/cni/calico/defaults/main.yml
+calico_version: 'v3.30.0'
+
 nginx_ingress_version: 'v1.7.0'
 apiserver_extra_sans: '{{ inventory_hostname }}'

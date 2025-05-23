@@ -1,51 +1,70 @@
-- name: Run on Ubuntu systems
+- name: kubeadm-packages | Block to configure repository for kubeadm packages and install
   block:
-  - name: Install google cloud public signing key
-    ansible.builtin.shell: curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
-
-  - name: Add kubernetes apt key
-    ansible.builtin.shell: echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
-
-  - name: Install Kubernetes packages on Ubuntu
+  - name: kubeadm-packages | Install pre-requisite packages on Ubuntu
     ansible.builtin.apt:
-      name: "{{ k8s_packages[ansible_os_family] }}"
+      name: "{{ kubeadm_packages[ansible_os_family]['pre_requisites'] }}"
+      state: latest
+    when:
+    - kubeadm_packages[ansible_os_family]['pre_requisites'] is defined
+    - kubeadm_packages[ansible_os_family]['pre_requisites']|length > 0
+
+  - name: kubeadm-packages | Create /etc/apt/keyrings
+    ansible.builtin.file:
+      path: /etc/apt/keyrings
+      state: directory
+      mode: '0755'
+
+  - name: kubeadm-packages | Download the public signing key on Ubuntu
+    ansible.builtin.shell: |
+      curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ kubeadm_version }}/deb/Release.key \
+      | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+  # This overwrites any existing configuration in /etc/apt/sources.list.d/kubernetes.list
+  - name: kubeadm-packages | Add kubernetes apt key
+    ansible.builtin.shell: |
+      echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ kubeadm_version }}/deb/ /' \
+      | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+  - name: kubeadm-packages | Install Kubernetes packages on Ubuntu
+    ansible.builtin.apt:
+      name: "{{ kubeadm_packages[ansible_os_family]['packages'] }}"
       state: latest
       update_cache: yes
 
-  - name: Fixed kube version
+  - name: kubeadm-packages | Fixed kube version
     ansible.builtin.command: apt-mark hold kubelet kubeadm kubectl
   when: ansible_distribution == "Ubuntu"
 
-- name: Template out kubernetes repo on RedHat Family systems
-  ansible.builtin.template:
-    src: kubernetes.repo.j2
-    dest: /etc/yum.repos.d/kubernetes.repo
-    mode: 0644
-    owner: root
-    group: root
+- name: kubeadm-packages | Block to install kubeadm repo and packages on RedHat Family systems
+  block:
+  - name: kubeadm-packages | Template out kubernetes repo on RedHat Family systems
+    ansible.builtin.template:
+      src: kubernetes.repo.j2
+      dest: /etc/yum.repos.d/kubernetes.repo
+      mode: 644
+      owner: root
+      group: root
+
+  - name: kubeadm-packages | Install kubeadm packages on RedHat Family systems
+    ansible.builtin.dnf:
+      name: "{{ kubeadm_packages[ansible_os_family]['packages'] }}"
+      state: latest
+      update_cache: yes
+      disable_excludes: kubernetes
   when: ansible_os_family == "RedHat"
 
-- name: Install Kubernetes packages on RedHat Family systems
-  ansible.builtin.dnf:
-    name: "{{ k8s_packages[ansible_os_family] }}"
-    state: latest
-    update_cache: yes
-    disable_excludes: kubernetes
-  when: ansible_os_family == "RedHat"
-
-- name: Get k8s images
+# https://v1-32.docs.kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#without-internet-connection
+- name: kubeadm-packages | Get k8s images
   ansible.builtin.command: kubeadm config images list
   when: inventory_hostname in groups.master
   register: _k8s_images
-  # run_once: true
+  changed_when: false
 
-- name: Show k8s images
+- name: kubeadm-packages | Show k8s images
   ansible.builtin.debug:
     var: _k8s_images.stdout_lines
   when: inventory_hostname in groups.master
-  # run_once: true
 
-- name: Pull k8s images
+- name: kubeadm-packages | Pull k8s images
   ansible.builtin.command: kubeadm config images pull
   when: inventory_hostname in groups.master
-  # run_once: true

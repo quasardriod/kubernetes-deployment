@@ -1,6 +1,6 @@
-# calico_version: 'v3.25'
-calico_version: 'v3.28.1'
-calico_manifest: "https://docs.projectcalico.org/archive/{{calico_version}}/manifests/calico.yaml"
+# calico_version: is coming from inventory/group_vars/all.yml
+calico_install_type: manifest # operator or manifest
+calico_manifest: "https://docs.projectcalico.org/archive/{{ calico_version }}/manifests/calico.yaml"
 
 calico_install_method:
   operator:
@@ -14,7 +14,5 @@ calico_install_method:
     config:
       url: "https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/calico.yaml"
       local_file: calico.yaml
-
-calico_install_type: operator # operator or manifest
 
 calicoctl_url: "https://github.com/projectcalico/calico/releases/download/{{ calico_version }}/calicoctl-linux-amd64"

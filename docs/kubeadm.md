@@ -1,7 +1,25 @@
 # Kubernetes Deployment using Kubeadm
+Review [Production environment](https://kubernetes.io/docs/setup/production-environment/) for detailed information on kubernetes deployment.
 
-- Single node Kubeadm deployment consists one master and one or more worker nodes.
-- Setup inventory as given in [example](../inventory/k8s-inv)
+- [Overview](#overview)
+
+
+# Overview
+Single node Kubeadm deployment consists one master and one or more worker nodes.
+
+- Setup inventory as given in [example](../inventory/k8s-inventory.yml)
+- Ensure nodes are grouped as below:
+```yaml
+  children:
+    master:
+      hosts:
+        k8s-master:
+    worker:
+      hosts:
+        k8s-worker:
+```
+---
+
 
 ## [K8s Nodes Deployment](./playbooks/k8s-deployment.yml) runs following playbooks in sequence for complete deployment.
 

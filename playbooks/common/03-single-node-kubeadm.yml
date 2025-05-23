@@ -1,7 +1,6 @@
 - name: Run playbook single-node-kubeadm
   hosts: master
   gather_facts: true
-  become: yes
 
   roles:
-  - role: install-kubeadm
+  - role: deploy-kubeadm

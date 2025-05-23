@@ -1,0 +1,21 @@
+all:
+  hosts:
+    k8s-master:
+      ansible_host: 192.168.10.194
+      ansible_port: 22
+      ansible_connection: ssh
+      ansible_python_interpreter: /usr/bin/python3
+      ansible_user: cloud-user
+    k8s-worker:
+      ansible_host: 192.168.10.73
+      ansible_port: 22
+      ansible_connection: ssh
+      ansible_python_interpreter: /usr/bin/python3
+      ansible_user: cloud-user
+  children:
+    master:
+      hosts:
+        k8s-master:
+    worker:
+      hosts:
+        k8s-worker:

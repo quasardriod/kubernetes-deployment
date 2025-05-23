@@ -1,0 +1,33 @@
+---
+
+- hosts: all
+  gather_facts: true
+
+  tasks:
+  - name: kubectl | Get latest stable kubectl version
+    ansible.builtin.shell: curl -L -s https://dl.k8s.io/release/stable.txt
+    register: kubectl_version
+    changed_when: false
+
+  - name: kubectl | Download kubectl
+    ansible.builtin.get_url:
+      url: https://dl.k8s.io/release/{{ kubectl_version.stdout }}/bin/linux/amd64/kubectl
+      dest: /usr/local/bin/kubectl
+      mode: '0755'
+      owner: root
+      group: root
+
+  - name: kubectl | Create symlink
+    ansible.builtin.file:
+      path: /usr/bin/kubectl
+      state: link
+      src: /usr/local/bin/kubectl
+      force: yes
+  - name: kubectl | Check kubectl version
+    ansible.builtin.shell: kubectl version
+    register: kubectl_version_check
+
+  - name: kubectl | Print kubectl version
+    ansible.builtin.debug:
+      msg: "kubectl version: {{ kubectl_version_check.stdout }}"
+    when: kubectl_version_check is changed

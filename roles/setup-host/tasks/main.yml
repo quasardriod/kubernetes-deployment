@@ -1,25 +1,24 @@
-
-- name: Install Common Packages
+- name: setup-host | Install Common Packages
   ansible.builtin.package:
     name: "{{ common_packages[ansible_os_family] }}"
     state: latest
     update_cache: yes
 
-- name: Disable swap
+- name: setup-host | Disable swap
   ansible.builtin.command: swapoff -a
 
-- name: Remove swap entry from /etc/fstab
+- name: setup-host | Remove swap entry from /etc/fstab
   ansible.builtin.lineinfile:
     path: /etc/fstab
     regexp: 'swap'
     state: absent
 
-- name: Set hostname
+- name: setup-host | Set hostname
   ansible.builtin.hostname:
     name: "{{ inventory_hostname }}"
     use: systemd
 
-- name: Prepare hosts entry
+- name: setup-host | Prepare hosts entry
   ansible.builtin.shell: |
     for h in {{ ansible_play_hosts|join(' ') }};do
       ip=$(ansible-inventory -i {{ inventory_file }} --host $h|jq .ansible_host|sed -e 's/\"//g')
@@ -29,12 +28,12 @@
   register: _hosts_entry
   run_once: true
 
-- name: Show hosts entry
+- name: setup-host | Show hosts entry
   ansible.builtin.debug:
     var: _hosts_entry.stdout_lines
   run_once: true
 
-- name: Add _hosts_entry in /etc/hosts
+- name: setup-host | Add _hosts_entry in /etc/hosts
   ansible.builtin.lineinfile:
     path: /etc/hosts
     regexp: "^{{ item.split(' ')[0] }}"
@@ -43,11 +42,11 @@
 
 # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 # Red Hat-based distributions -> Set SELinux to permissive mode:
-- name: Set selinux to permission mode
+- name: setup-host | Set selinux to permission mode
   ansible.builtin.command: setenforce 0
   when: ansible_os_family == "RedHat"
 
-- name: Set permissive in /etc/selinux/config
+- name: setup-host | Set permissive in /etc/selinux/config
   ansible.builtin.lineinfile:
     path: /etc/selinux/config
     regexp: '^SELINUX'

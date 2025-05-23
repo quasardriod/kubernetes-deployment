@@ -1,14 +1,23 @@
-
-- name: Create .kube
+- name: kubeconfig | Create .kube
   ansible.builtin.file:
-    path: "{{lookup('env', 'HOME')}}/.kube"
+    path: "{{ lookup('env', 'HOME') }}/.kube"
     state: directory
   delegate_to: localhost
   become: false
 
-- name: Fetch kubeconfig from master to localhost
+- name: kubeconfig | Fetch kubeconfig from master to localhost
   ansible.builtin.fetch:
     src: "{{ KUBECONFIG }}"
     dest: "{{ LOCAL_KUBECONFIG }}"
     flat: yes
-    mode: 0644
+    mode: '0644'
+
+- name: kubeconfig | Run reachability test
+  ansible.builtin.command: kubectl get nodes
+  register: _kstatus
+  environment:
+    KUBECONFIG: "{{ LOCAL_KUBECONFIG }}"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+  failed_when: _kstatus.rc != 0

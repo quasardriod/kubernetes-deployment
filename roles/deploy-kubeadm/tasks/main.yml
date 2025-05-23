@@ -1,66 +1,71 @@
-
-- name: Check if /etc/kubernetes/admin.conf already exists
+- name: deploy-kubeadm | Check if /etc/kubernetes/admin.conf already exists
   ansible.builtin.stat:
     path: /etc/kubernetes/admin.conf
   register: _kconfig
 
-- block:
-  - name: Check state of the cluster
+- name: deploy-kubeadm | Block to look for existing running cluster and prompt to skip deployment
+  block:
+  - name: deploy-kubeadm | Check state of the cluster
     ansible.builtin.shell: kubectl cluster-info
     environment:
       KUBECONFIG: "{{ KUBECONFIG }}"
     register: _kstatus
 
-  - name: show k8s cluter-info
+  - name: deploy-kubeadm | show k8s cluter-info
     ansible.builtin.debug:
       var: _kstatus.stdout_lines
 
-  - name: Review cluster status
+  - name: deploy-kubeadm | Review cluster status
     ansible.builtin.pause:
       echo: yes
       minutes: 15
-      prompt: "\n Review cluster status in above output. \n If it's looking healthy Continue, else Abort and troubleshoot problem"
+      prompt: "
+
+        \ Review cluster status in above output.\ 
+
+        \ If it's looking healthy Continue, else Abort and troubleshoot problem"
     when: _kstatus.rc == 0
   when: _kconfig.stat.exists
 
-- block:
+- name: deploy-kubeadm | Start kubeadm deployment
+  block:
   # If k8s cluster running in openstack
-  - name: Append floating ip in apiserver_extra_sans
+  - name: deploy-kubeadm | Append floating ip in apiserver_extra_sans
     ansible.builtin.set_fact:
       apiserver_extra_sans: "{{ apiserver_extra_sans }},{{ master_floating_ip }}"
     when: master_floating_ip is defined
 
-  - name: Initialize k8s master
+  - name: deploy-kubeadm | Initialize k8s master
     ansible.builtin.command: kubeadm init --apiserver-cert-extra-sans "{{ apiserver_extra_sans }}"
     run_once: true
     register: _kinit
 
-  - name: Show kubeadm init output
+  - name: deploy-kubeadm | Show kubeadm init output
     ansible.builtin.debug:
       var: _kinit.stdout_lines
     run_once: true
   when: not _kconfig.stat.exists
 
-- name: Set Permission on /etc/kubernetes/admin.conf
+- name: deploy-kubeadm | Set Permission on /etc/kubernetes/admin.conf
   ansible.builtin.file:
     path: /etc/kubernetes/admin.conf
-    mode: 0644
+    mode: '0644'
 
-- name: Create .kube in {{ ansible_user }} home
+- name: deploy-kubeadm | Create .kube in {{ ansible_user }} home
   ansible.builtin.file:
     path: "{{ ansible_env['HOME'] }}/.kube"
     state: directory
-    # become: false
 
-- name: Copy /etc/kubernetes/admin.conf in .kube
+- name: deploy-kubeadm | Copy /etc/kubernetes/admin.conf in .kube
   ansible.builtin.copy:
     src: /etc/kubernetes/admin.conf
     dest: "{{ ansible_env['HOME'] }}/.kube/config"
-    mode: 0644
+    mode: '0644'
     remote_src: true
-    # become: false
 
-- name: Do lookup for non-running pods
+- name: deploy-kubeadm | Do lookup for non-running pods
   ansible.builtin.include_role:
     name: health-check
     tasks_from: pods-health.yml
+  vars:
+    namespace: 'A'

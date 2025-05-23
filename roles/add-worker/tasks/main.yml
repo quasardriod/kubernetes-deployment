@@ -1,5 +1,4 @@
-
-- name: Get k8s cluster nodes
+- name: add-worker | Get k8s cluster nodes
   ansible.builtin.shell: kubectl get nodes|egrep -v NAME|awk '{print $1}'
   environment:
     KUBECONFIG: "{{ LOCAL_KUBECONFIG }}"
@@ -7,24 +6,31 @@
   delegate_to: localhost
   run_once: true
 
-- name: End host when already in cluster
+- name: add-worker | End host when already in cluster
   ansible.builtin.meta: end_host
   when:
   - inventory_hostname in groups.worker
   - inventory_hostname in _nodes.stdout_lines
 
-- name: set fact add_new_node=true
+- name: add-worker | set fact add_new_node=true
   ansible.builtin.set_fact:
     add_new_node: true
   with_items: "{{ groups.worker }}"
   when: item in ansible_play_hosts
 
-- name: Show message when no new node to join
+- name: add-worker | Show message when no new node to join
   ansible.builtin.debug:
     msg: "No new worker node available to add in k8s cluster"
   when: not add_new_node|bool
 
-- name: Generate node join token
+- name: add-worker | Show nodes to be added in k8s cluster
+  ansible.builtin.debug:
+    var: inventory_hostname
+  when:
+  - add_new_node|bool
+  - inventory_hostname in groups.worker
+
+- name: add-worker | Generate node join token
   ansible.builtin.command: kubeadm token create --print-join-command
   register: _join_token
   environment:
@@ -34,52 +40,52 @@
   - add_new_node|bool
   - inventory_hostname in groups.master
 
-- name: Copy Generated token in {{token_gen_output}} on localhost
+- name: add-worker | Copy Generated token in {{ token_gen_output }} on localhost
   ansible.builtin.copy:
     content: "{{ _join_token.stdout }}"
     dest: "{{ token_gen_output }}"
-    mode: 0755
+    mode: '0755'
   when: inventory_hostname in groups.master
   delegate_to: localhost
+  run_once: true
 
-- name: Copy {{token_gen_output}} on worker nodes
+- name: add-worker | Copy {{ token_gen_output }} on worker nodes
   ansible.builtin.copy:
     src: "{{ token_gen_output }}"
     dest: "{{ token_gen_output }}"
-    mode: 0755
+    mode: '0755'
     owner: root
     group: root
   when: inventory_hostname in groups.worker
 
-- name: Run node join command on worker node
+- name: add-worker | Run node join command on worker node
   ansible.builtin.shell: /bin/bash {{ token_gen_output }}
   register: _node_join
   when:
   - inventory_hostname in groups.worker
 
-- name: Wait for 10 mins for node to become ready
+- name: add-worker | Wait for 10 mins for node to become ready
   ansible.builtin.pause:
     minutes: 10
     echo: yes
-  when: _node_join is defined and _node_join is changed
 
-- name: Set node label
+- name: add-worker | Set node label
   ansible.builtin.shell: |
     kubectl label node {{ item }} node-role.kubernetes.io/worker=worker
   environment:
     KUBECONFIG: "{{ LOCAL_KUBECONFIG }}"
-  with_items: "{{ ansible_play_hosts }}"
+  loop: "{{ ansible_play_hosts }}"
   when: item in groups.worker
   delegate_to: localhost
   run_once: true
 
-- name: Get k8s cluster nodes
+- name: add-worker | Get k8s cluster nodes
   local_action: ansible.builtin.shell kubectl get nodes
   environment:
-    KUBECONFIG: "{{LOCAL_KUBECONFIG}}"
+    KUBECONFIG: "{{ LOCAL_KUBECONFIG }}"
   register: _nodes
 
-- name: Show nodes
+- name: add-worker | Show nodes
   ansible.builtin.debug:
     var: _nodes.stdout_lines
   run_once: true

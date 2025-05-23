@@ -1,7 +1,18 @@
-k8s_version: '1.30'
-k8s_packages:
+kubeadm_packages:
+  Ubuntu:
+    pre_requisites:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    - lsb-release
+    packages:
+    - kubelet
+    - kubeadm
+    - kubectl
   RedHat:
-  - kubelet
-  - kubeadm
-  - kubectl
-
+    pre_requisites: []
+    packages:
+    - kubelet
+    - kubeadm
+    - kubectl

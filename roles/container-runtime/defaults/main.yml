@@ -1,16 +1,16 @@
-docker_repo:
-  RedHat: "https://download.docker.com/linux/centos/docker-ce.repo"
-
 containerd_packages:
   Ubuntu:
-  - docker-ce
-  - docker-ce-cli
-  - containerd.io
-  - docker-buildx-plugin
-  - docker-compose-plugin
+    packages:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-buildx-plugin
+    - docker-compose-plugin
   RedHat:
-  - docker-ce
-  - docker-ce-cli
-  - containerd.io
-  - docker-buildx-plugin
-  - docker-compose-plugin
+    repo_file_url: "https://download.docker.com/linux/centos/docker-ce.repo"
+    packages:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-buildx-plugin
+    - docker-compose-plugin

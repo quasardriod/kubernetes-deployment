@@ -1,8 +1,6 @@
-
 - name: Run playbook cni-provider
   hosts: all:!worker
   gather_facts: true
-  become: yes
 
   vars:
     cni_provider: calico

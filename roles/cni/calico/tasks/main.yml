@@ -1,7 +1,7 @@
-- name: Include calico using {{ calico_install_type }} method
+- name: calico | Include calico using {{ calico_install_type }} method
   ansible.builtin.include_tasks: "{{ calico_install_type }}.yml"
 
-- name: Do lookup for non-running pods
+- name: calico | Do lookup for non-running pods
   ansible.builtin.include_role:
     name: health-check
     tasks_from: pods-health.yml
@@ -9,9 +9,10 @@
       tags:
       - non-running-pods
   vars:
-    ns: 'kube-system'
+    namespace: 'kube-system'
 
-- ansible.builtin.fail:
+- name: calico | Check for non-running pods
+  ansible.builtin.fail:
     msg:
     - "Error: In kube-system NS, some pods are not running, manual troubleshooting is needed"
   when: _non_running_pods.stdout != ""

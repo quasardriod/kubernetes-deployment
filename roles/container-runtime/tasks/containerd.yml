@@ -1,45 +1,68 @@
+# https://kubernetes.io/docs/setup/production-environment/container-runtimes/#cgroup-drivers
+- name: container-runtime | Get cgroup driver for machine
+  ansible.builtin.command: stat -fc %T /sys/fs/cgroup/
+  register: _cgroup_driver
+  changed_when: false
+
+- name: container-runtime | Ensure cgroup v2 is enabled on machine
+  ansible.builtin.assert:
+    that:
+    - _cgroup_driver.stdout == "cgroup2fs"
+    fail_msg:
+    - "Cgroup driver is not cgroup2fs. Please check your system."
+    - "https://kubernetes.io/docs/concepts/architecture/cgroups/"
+    - "https://kubernetes.io/docs/setup/production-environment/container-runtimes/#cgroup-drivers"
+
+# Installing containerd
+# https://kubernetes.io/docs/setup/production-environment/container-runtimes/#containerd
+# https://github.com/containerd/containerd/blob/main/docs/getting-started.md
 
 # Containerd packages are provided by Docker
 # https://github.com/containerd/containerd/blob/main/docs/getting-started.md: Option 2
 
-- name: Stat /etc/apt/keyrings/docker.gpg
-  ansible.builtin.stat:
-    path: /etc/apt/keyrings/docker.gpg
-  register: _docker_gpg
+# Configure docker repo on Ubuntu
+- name: container-runtime | Configure docker repo on Ubuntu
+  block:
+  - name: container-runtime | Stat /etc/apt/keyrings/docker.gpg
+    ansible.builtin.stat:
+      path: /etc/apt/keyrings/docker.gpg
+    register: _docker_gpg
+
+  - name: container-runtime |Install Docker gpgkey on Ubuntu
+    ansible.builtin.shell: |
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+      chmod a+r /etc/apt/keyrings/docker.gpg
+    when: not _docker_gpg.stat.exists
+
+  - name: container-runtime | Stat /etc/apt/sources.list.d/docker.list
+    ansible.builtin.stat:
+      path: /etc/apt/sources.list.d/docker.list
+    register: _docker_repo
+
+  - name: container-runtime | Setup Repo in Ubuntu
+    ansible.builtin.shell: |
+      echo \
+      "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+      "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    when: not _docker_repo.stat.exists
   when: ansible_distribution == "Ubuntu"
 
-- name: Install Docker gpgkey
-  ansible.builtin.shell: |
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    chmod a+r /etc/apt/keyrings/docker.gpg
-  when:
-  - ansible_distribution == "Ubuntu"
-  - not _docker_gpg.stat.exists
+- name: container-runtime | Configure repo on RedHat Family OS
+  block:
+  - name: container-runtime | Install dnf-plugins-core
+    ansible.builtin.dnf:
+      name: dnf-plugins-core
+      state: latest
 
-- name: Stat /etc/apt/sources.list.d/docker.list
-  ansible.builtin.stat:
-    path: /etc/apt/sources.list.d/docker.list
-  register: _docker_repo
-  when: ansible_distribution == "Ubuntu"
-
-- name: Setup Repo in Ubuntu
-  ansible.builtin.shell: |
-    echo \
-    "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-    "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  when:
-  - ansible_distribution == "Ubuntu"
-  - not _docker_repo.stat.exists
-
-- name: Install docker repo on RedHat Family OS
-  ansible.builtin.command: yum-config-manager --add-repo {{ docker_repo[ansible_os_family] }}
+  - name: container-runtime | Install docker repo on RedHat Family OS
+    ansible.builtin.command: yum-config-manager --add-repo {{ containerd_packages[ansible_os_family]['repo_file_url'] }}
   when: ansible_os_family == "RedHat"
 
 - name: Install Containerd packages
   ansible.builtin.package:
-    name: "{{ containerd_packages[ansible_os_family] }}"
+    name: "{{ containerd_packages[ansible_os_family]['packages'] }}"
     update_cache: yes
     state: latest
 
@@ -51,7 +74,7 @@
   ansible.builtin.copy:
     src: containerd/config.toml
     dest: /etc/containerd/
-    mode: 0644
+    mode: 644
     owner: root
     group: root
   register: _containerd_config
