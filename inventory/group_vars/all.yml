@@ -1,10 +1,15 @@
 KUBECONFIG: /etc/kubernetes/admin.conf
 LOCAL_KUBECONFIG: "{{lookup('env', 'HOME')}}/.kube/config"
-kubeadm_version: '1.32'
+kubeadm_version: '1.33'
 
 # Calico is deployed using "manifest" method, operator is not tested yet
 # calico_install_type can be "operator" or "manifest", defined in roles/cni/calico/defaults/main.yml
 calico_version: 'v3.30.0'
+ISTIO_VERSION: '1.26.0'
+IngressClass:
+- controller: ingress-nginx
+  name: nginx
+  default: true
+  version: 'v1.12.2'
 
-nginx_ingress_version: 'v1.7.0'
 apiserver_extra_sans: '{{ inventory_hostname }}'

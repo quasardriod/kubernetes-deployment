@@ -1,0 +1,19 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-node
+  namespace: default
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: k8s-worker-1.default.svc.cluster.local
+    http:
+      paths:
+      - backend:
+          service:
+            name: hello-node
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix

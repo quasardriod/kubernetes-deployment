@@ -24,26 +24,33 @@ function configure_privileges(){
     fi
 }
 function inventory_checks(){
-    debug "User provided inventory: $1"
-    MACHINES_INVENTORY=$1
-    if [ ! -f $MACHINES_INVENTORY ];then
-        error "\nERROR: Inventory file: $MACHINES_INVENTORY not found\n"
+    if [ ! -f $k8s_inventory ];then
+        error "\nERROR: Inventory file: $k8s_inventory not found\n"
         exit 1
     fi
     
     # Check if the inventory file is valid
-    if ! ansible-inventory -i $MACHINES_INVENTORY --list > /dev/null 2>&1; then
-        error "\nERROR: Invalid inventory file: $MACHINES_INVENTORY\n"
+    if ! ansible-inventory -i $k8s_inventory --list > /dev/null 2>&1; then
+        error "\nERROR: Invalid inventory file: $k8s_inventory\n"
         exit 1
     fi
 
     # Check connectivity to all hosts in the inventory
-    if ! ansible all -i $MACHINES_INVENTORY -m ping > /dev/null 2>&1; then
+    if ! ansible all -i $k8s_inventory -m ping > /dev/null 2>&1; then
         error "\nERROR: Unable to connect to one or more hosts in the inventory\n"
         exit 1
     fi
-    success "Inventory file: $MACHINES_INVENTORY is valid and all hosts are reachable."    
-    sudo cp -rf $MACHINES_INVENTORY $k8s_inventory
+
+    # Ensure master and worker groups are defined in the inventory
+    if ! ansible-inventory -i $k8s_inventory --list | jq -e '.master' > /dev/null 2>&1; then
+        error "ERROR: 'master' group not defined in the inventory file: $k8s_inventory\n"
+        exit 1
+    fi
+    if ! ansible-inventory -i $k8s_inventory --list | jq -e '.worker' > /dev/null 2>&1; then
+        error "ERROR: 'worker' group not defined in the inventory file: $k8s_inventory\n"
+        exit 1
+    fi
+    success "Inventory file: $k8s_inventory is valid and all hosts are reachable."    
 }
 
 tools
@@ -51,8 +58,8 @@ tools
 function kubeadm_deployment(){
     # Query inventory for ansible_user, if ansible_user is not root,
     # set become option
-    configure_privileges
-    pb=playbooks/k8s-deployment.yml
+    # configure_privileges
+    pb=ansible/playbooks/k8s-deployment.yml
 
     # Ensure master group is defined in the inventory and has one host
     master_hosts_count=$(ansible-inventory -i $k8s_inventory --list -l master|jq '.master.hosts|length')
@@ -67,35 +74,26 @@ function kubeadm_deployment(){
         exit 1
     fi
 
-    ansible-playbook -i $k8s_inventory $pb \
-    $ansible_extra_options
+    ansible-playbook -i $k8s_inventory $pb
 }
 
 usage(){
     echo
     echo "Usage: $0 [options]"
     echo "Options:"
-    echo " -d                   Download kubeconfig on local machine"
-    echo " -i <inventory.yml>   Configure Inventory file for the deployment, required: [inventory.yml]"
-    echo " -k                   Deploy Kubernetes cluster using kubeadm"
-    echo " -h                   help, this message"
-    echo " -t                   Download kubernetes client tools, e.g. kubectl, helm, kustomize"    
+    echo " -d   Download kubeconfig on local machine"
+    echo " -i   Configure Inventory file for the deployment"
+    echo " -k   Deploy Kubernetes cluster using kubeadm"
+    echo " -h   help, this message"
+    echo " -t   Download kubernetes client tools, e.g. kubectl, helm, kustomize"
     echo
     exit 0
 }
 
-while getopts 'dhkti:' opt; do
+while getopts 'dhkti' opt; do
     case $opt in
-        d)  download_kubeconfig $k8s_inventory;;
-        i) 
-            if [ -z "$OPTARG" ]; then
-                error "Error: -m requires an argument."
-                usage
-                exit 1
-            fi
-            inventory_checks "$OPTARG"
-            ;;
-
+        d) download_kubeconfig;;
+        i) inventory_checks;;
         k) kubeadm_deployment;;
         t) k8s_tools;;
         h) usage;;

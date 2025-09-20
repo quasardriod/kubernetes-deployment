@@ -1,0 +1,24 @@
+- name: istio/ambient | Get {{ istio_download_path }}/istio-{{ ISTIO_VERSION }} stat
+  ansible.builtin.stat:
+    path: "{{ istio_download_path }}/istio-{{ ISTIO_VERSION }}"
+  register: istio_download_path_stat
+
+- name: istio/ambient | Download the Istio CLI version {{ ISTIO_VERSION }}
+  ansible.builtin.shell: |
+    curl -L https://istio.io/downloadIstio | ISTIO_VERSION={{ ISTIO_VERSION }} sh -
+  args:
+    chdir: "{{ istio_download_path }}"
+  when: not istio_download_path_stat.stat.exists
+
+- name: istio/ambient | Set istioctl symlink to "/usr/local/bin"
+  ansible.builtin.file:
+    src: "{{ istio_download_path }}/istio-{{ ISTIO_VERSION }}/bin/istioctl"
+    dest: "{{ istio_download_path }}/istioctl"
+    state: link
+    force: yes
+  when: istio_download_path_stat.stat.exists
+
+- name: istio/ambient | Ensure downloaded directory permission is 0755
+  ansible.builtin.file:
+    path: "{{ istio_download_path }}/istio-{{ ISTIO_VERSION }}"
+    mode: '0755'

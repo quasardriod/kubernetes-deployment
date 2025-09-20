@@ -1,0 +1,10 @@
+- hosts: master[0]
+  gather_facts: true
+
+  vars:
+    istio_deployment_method: "ambient"
+
+  tasks:
+  - name: istio | Include istio role for deployment method {{ istio_deployment_method }}
+    ansible.builtin.include_role:
+      name: "istio/{{ istio_deployment_method }}"

@@ -1,0 +1,11 @@
+# Ingress Controller can be exposed using LoadBalancer or NodePort Service type
+expose_method: nodeport # Supported values [lb, nodeport]
+
+ingress_nginx_version: "{{ IngressClass | selectattr('controller', 'equalto', 'ingress-nginx') | map(attribute='version') | list | first }}"
+
+nginx_ingress_manifest:
+  # lb: "https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{nginx_ingress_version}}/deploy/static/provider/cloud/deploy.yaml"
+  nodeport: "https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{ ingress_nginx_version }}/deploy/static/provider/baremetal/deploy.yaml"
+
+local_nginx_ingress_manifest: "{{ ansible_env.HOME }}/nginx-ingress-controller.yaml"
+default_ingress_class_manifest: "{{ ansible_env.HOME }}/default-nginx-ingressclass.yaml"

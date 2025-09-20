@@ -17,3 +17,4 @@ $ ansible-playbook -i inventory/single-node-k8s-hosts playbooks/common/ingress-c
 - https://docs.k0sproject.io/v1.23.6+k0s.2/examples/nginx-ingress/
 - [IngressClass](https://kubernetes.io/docs/concepts/services-networking/ingress/#default-ingress-class)
 - https://docs.nginx.com/nginx-ingress-controller/intro/how-nginx-ingress-controller-works/
+

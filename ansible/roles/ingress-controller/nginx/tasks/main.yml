@@ -1,0 +1,65 @@
+- name: nginx-ingress | Download Nginx Ingress controller manifest
+  ansible.builtin.get_url:
+    url: "{{ nginx_ingress_manifest[expose_method] }}"
+    dest: "{{ local_nginx_ingress_manifest}}"
+    mode: '0644'
+
+- name: nginx-ingress | Install Nginx Ingress controller
+  ansible.builtin.command: kubectl apply -f "{{ local_nginx_ingress_manifest}}"
+  environment:
+    KUBECONFIG: "{{ KUBECONFIG }}"
+
+- name: nginx-ingress | Get ingressclasses from ingress-nginx NS
+  ansible.builtin.shell: |
+    # kubectl -n ingress-nginx get ingressclasses|egrep -v NAME|awk '{print $1}'
+    kubectl -n ingress-nginx get ingressclasses
+  environment:
+    KUBECONFIG: "{{ KUBECONFIG }}"
+  register: nginx_ingress_class
+
+- name: nginx-ingress | Show nginx_ingress_class
+  ansible.builtin.debug:
+    var: nginx_ingress_class.stdout_lines
+
+- name: nginx-ingress | Get IngressClass
+  ansible.builtin.shell: kubectl get IngressClass -o yaml
+  environment:
+    KUBECONFIG: "{{ KUBECONFIG }}"
+  register: get_IngressClass
+
+- name: nginx-ingress | Show IngressClass
+  ansible.builtin.debug:
+    var: get_IngressClass.stdout_lines
+
+- name: nginx-ingress | Get name of IngressClass
+  ansible.builtin.shell: kubectl get IngressClass -o json|jq -r '.items[].metadata.name'
+  environment:
+    KUBECONFIG: "{{ KUBECONFIG }}"
+  register: ingressclass_name
+
+- name: nginx-ingress | Show ingressclass_name
+  ansible.builtin.debug:
+    var: ingressclass_name.stdout
+
+- name: nginx-ingress | Block to set default IngressClass
+  block:
+  - name: nginx-ingress | Copy nginx-default-ingressclass.yaml to master
+    ansible.builtin.copy:
+      src: nginx-default-ingressclass.yaml
+      dest: "{{ default_ingress_class_manifest }}"
+      mode: '0644'
+
+  - name: nginx-ingress | Apply IngressClass manifest
+    ansible.builtin.command: kubectl apply -f {{ default_ingress_class_manifest }}
+    environment:
+      KUBECONFIG: "{{ KUBECONFIG }}"
+
+  - name: nginx-ingress | Wait for ingress controller to come up
+    ansible.builtin.shell: |
+      kubectl wait --namespace ingress-nginx \
+        --for=condition=ready pod \
+        --selector=app.kubernetes.io/component=controller \
+        --timeout=120s
+    environment:
+      KUBECONFIG: "{{ KUBECONFIG }}"
+  when: ingressclass_name.stdout == "nginx"
