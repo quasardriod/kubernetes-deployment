@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: powerdns-admin
+  namespace: powerdns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: powerdns-admin
+  template:
+    metadata:
+      labels:
+        app: powerdns-admin
+    spec:
+      containers:
+      - name: admin
+        image: ngoduykhanh/powerdns-admin:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: PDNS_API_URL
+          value: http://powerdns:8081
+        - name: PDNS_API_KEY
+          value: supersecretapikey
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: powerdns-admin
+  namespace: powerdns
+spec:
+  selector:
+    app: powerdns-admin
+  ports:
+  - port: 80

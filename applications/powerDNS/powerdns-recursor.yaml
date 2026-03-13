@@ -1,0 +1,61 @@
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: recursor-config
+#   namespace: powerdns
+# data:
+#   recursor.conf: |
+#     local-address=0.0.0.0
+#     local-port=53
+
+#     allow-from=0.0.0.0/0
+
+#     forward-zones=example.com=powerdns-auth.powerdns.svc.cluster.local
+
+#     forward-zones-recurse=.=8.8.8.8;1.1.1.1
+
+#     loglevel=4
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: powerdns-recursor
+  namespace: powerdns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: powerdns-recursor
+  template:
+    metadata:
+      labels:
+        app: powerdns-recursor
+    spec:
+      containers:
+      - name: recursor
+        image: powerdns/pdns-recursor-49
+        command: ["pdns_recursor"]
+        args:
+        - --local-address=0.0.0.0
+        - --local-port=53
+        - --allow-from=0.0.0.0/0
+        - --forward-zones=example.com=powerdns-auth.powerdns.svc.cluster.local
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: powerdns-recursor
+  namespace: powerdns
+spec:
+  selector:
+    app: powerdns-recursor
+  ports:
+  - name: dns-udp
+    port: 53
+    protocol: UDP
+  - name: dns-tcp
+    port: 53
+    protocol: TCP

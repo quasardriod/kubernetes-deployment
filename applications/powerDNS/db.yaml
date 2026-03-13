@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: powerdns-db-secret
+  namespace: powerdns
+type: Opaque
+stringData:
+  MYSQL_ROOT_PASSWORD: rootpass
+  MYSQL_DATABASE: powerdns
+  MYSQL_USER: powerdns
+  MYSQL_PASSWORD: pdnspass
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: powerdns-mariadb
+  namespace: powerdns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: powerdns-mariadb
+  template:
+    metadata:
+      labels:
+        app: powerdns-mariadb
+    spec:
+      containers:
+      - name: mariadb
+        image: mariadb:10.6
+        ports:
+        - containerPort: 3306
+        envFrom:
+        - secretRef:
+            name: powerdns-db-secret
+        volumeMounts:
+        - name: db-data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: db-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: powerdns-mariadb
+  namespace: powerdns
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: powerdns-mariadb
