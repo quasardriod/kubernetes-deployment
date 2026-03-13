@@ -1,0 +1,10 @@
+all:
+  hosts:
+    minikube:
+      ansible_host: 192.168.64.171
+      ansible_port: 22
+      ansible_connection: ssh
+      ansible_python_interpreter: /usr/bin/python3
+      ansible_user: cloud-user
+      ansible_become: true
+      ansible_become_method: sudo

@@ -1,24 +1,5 @@
 #!/bin/bash
 
-function tools(){
-    if ! which git > /dev/null 2>&1;then
-        sudo dnf install git curl -y -q
-    fi
-
-    if ! which ansible > /dev/null 2>&1;then
-        sudo dnf install ansible-core -y -q
-    fi
-
-    if ! which kubectl > /dev/null 2>&1;then
-        curl -LO -s "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        sudo install kubectl /usr/local/bin
-    fi
-
-    if [ ! -f /usr/bin/kubectl ];then
-        sudo ln -s /usr/local/bin/kubectl /usr/bin/kubectl
-    fi
-}
-
 function error(){
     echo -e "\e[31m$1\e[0m"
 }
@@ -38,6 +19,25 @@ function notice(){
     echo -e "\e[36m$1\e[0m"
 }
 
+function tools(){
+    if ! which git > /dev/null 2>&1;then
+        sudo dnf install git curl -y -q
+    fi
+
+    if ! which ansible > /dev/null 2>&1;then
+        error "\nERROR: ansible not found. Please install ansible first.\n"
+        exit 1
+    fi
+
+    # if ! which kubectl > /dev/null 2>&1;then
+    #     curl -LO -s "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    #     sudo install kubectl /usr/local/bin
+    # fi
+
+    # if [ ! -f /usr/bin/kubectl ];then
+    #     sudo ln -s /usr/local/bin/kubectl /usr/bin/kubectl
+    # fi
+}
 function download_kubeconfig(){
     pb_download_kubeconfig=playbooks/adhoc/download-kubeconfig.yml
     inventory=$1
@@ -109,3 +109,22 @@ function k8s_tools(){
     install_helm
     # install_kustomize
 }
+
+function install_ansible(){
+    if ! which ansible > /dev/null 2>&1;then
+        if ansible localhost -m setup -a "filter=os_family" | grep -q "RedHat"; then
+            sudo dnf install ansible -y -q
+        elif ansible localhost -m setup -a "filter=os_family" | grep -q "Debian"; then
+            sudo apt-get install ansible -y -q
+        else
+            error "ERROR: Unsupported OS. Please install ansible manually."
+            exit 1
+        fi
+    fi
+}
+
+function install_ansible_collections(){
+    ansible-galaxy collection install ansible.posix
+}
+
+tools

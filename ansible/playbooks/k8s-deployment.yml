@@ -1,28 +1,26 @@
 # common/01-k8s-prerequisite.yml pb calls following roles:
 # roles: setup-host, container-runtime
-- ansible.builtin.import_playbook: common/01-k8s-prerequisite.yml
+# - ansible.builtin.import_playbook: common/01-k8s-prerequisite.yml
 
-# common/02-kubeadm-packages.yml pb calls following roles:
-# role: kubeadm-packages
-- ansible.builtin.import_playbook: common/02-kubeadm-packages.yml
+# # common/02-kubeadm-packages.yml pb calls following roles:
+# # role: kubeadm-packages
+# - ansible.builtin.import_playbook: common/02-kubeadm-packages.yml
 
-# common/03-single-node-kubeadm.yml pb calls following roles:
-# roles: install-kubeadm
-- ansible.builtin.import_playbook: common/03-single-node-kubeadm.yml
+# # common/03-single-node-kubeadm.yml pb calls following roles:
+# # roles: install-kubeadm
+# - ansible.builtin.import_playbook: common/03-single-node-kubeadm.yml
 
-# common/04-cni-provider.yml pb calls following roles:
-# roles: cni
-- ansible.builtin.import_playbook: common/04-cni-provider.yml
-  vars:
-    cni_provider: calico
+# # common/04-cni-provider.yml pb calls following roles:
+# # roles: cni
+# - ansible.builtin.import_playbook: common/04-cni-provider.yml
 
 # common/05-add-worker.yml pb calls following roles:
 # roles: download-kubeconfig, add-worker
 - ansible.builtin.import_playbook: common/05-add-worker.yml
 
-- ansible.builtin.import_playbook: common/06-ingress-controller.yml
-  vars:
-    ingress_provider: nginx
+# - ansible.builtin.import_playbook: common/06-ingress-controller.yml
+#   vars:
+#     ingress_provider: nginx
 
 # - ansible.builtin.import_playbook: common/istio.yml
 

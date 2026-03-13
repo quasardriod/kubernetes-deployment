@@ -11,6 +11,35 @@
     register: _local_kconfig
     run_once: true
 
+  - name: add-worker | Check if kubectl is available on localhost
+    ansible.builtin.shell: which kubectl
+    register: _kubectl_check
+    delegate_to: localhost
+    become: false
+    ignore_errors: true
+    run_once: true
+
+  - name: add-worker | Get latest kubectl version
+    ansible.builtin.uri:
+      url: https://dl.k8s.io/release/stable.txt
+      return_content: yes
+    register: kubectl_version_result
+    delegate_to: localhost
+    run_once: true
+    become: false
+    when: _kubectl_check.rc != 0
+
+  - name: add-worker | Download kubectl binary
+    ansible.builtin.get_url:
+      url: "https://dl.k8s.io/release/{{ kubectl_version_result.content | trim }}/bin/linux/amd64/kubectl"
+      dest: /usr/local/bin/kubectl
+      mode: '0755'
+      force: yes
+    when: _kubectl_check.rc != 0
+    delegate_to: localhost
+    run_once: true
+    become: true
+
   - name: add-worker | Run k8s reachability test
     ansible.builtin.command: kubectl get nodes
     register: _kstatus

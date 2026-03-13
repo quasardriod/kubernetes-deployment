@@ -2,9 +2,37 @@
   hosts: all:!worker
   gather_facts: true
 
-  vars:
-    cni_provider: calico
+  pre_tasks:
+  - name: Set CNI profile from deployment capabilities
+    ansible.builtin.set_fact:
+      cni_profile: >-
+        {{
+          (
+            kubeadm_deployment_capablities.cni
+            | dict2items
+            | selectattr('value.deploy', 'defined')
+            | selectattr('value.deploy')
+            | map(attribute='key')
+            | list
+            | first
+          )
+          | default('')
+        }}
 
+  - name: Set CNI provider from selected profile
+    ansible.builtin.set_fact:
+      cni_provider: "{{ cni_profile }}"
+    when: cni_profile | length > 0
+
+  - name: Debug CNI provider
+    ansible.builtin.debug:
+      msg: "Selected CNI provider: {{ cni_provider }}"
+
+  - name: Fail if no CNI provider is selected
+    ansible.builtin.fail:
+      msg: "No CNI provider selected. Please check kubeadm_deployment_capablities.cni in group_vars/all.yml"
+    when: cni_provider | length == 0
+  
   tasks:
   - name: Install Calico
     ansible.builtin.include_role:

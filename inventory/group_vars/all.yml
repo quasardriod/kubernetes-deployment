@@ -13,3 +13,11 @@ IngressClass:
   version: 'v1.12.2'
 
 apiserver_extra_sans: '{{ inventory_hostname }}'
+
+kubeadm_deployment_capablities:
+  cni:
+    calico:
+      deploy: true
+      version: 'v3.30.0'
+
+

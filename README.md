@@ -5,8 +5,16 @@
 
 ## Overview
 
-Supported OS:
-- CentOS 9
+
+## Requirements
+- Supported OS:
+  * CentOS 9
+- Ansible Core >= 2.17
+- Ansible Collections:
+  * ansible.posix
+  * community.general
+
+---
 
 ## Deploy K8s cluster using kubeadm
 Refer [Kubernetes Deployment using Kubeadm](./docs/kubeadm.md).

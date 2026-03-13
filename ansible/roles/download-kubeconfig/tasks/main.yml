@@ -1,6 +1,6 @@
 - name: kubeconfig | Create .kube
   ansible.builtin.file:
-    path: "{{ lookup('env', 'HOME') }}/.kube"
+    path: "{{ ansible_env.HOME }}/.kube"
     state: directory
   delegate_to: localhost
   become: false

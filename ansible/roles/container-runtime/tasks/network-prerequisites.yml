@@ -2,7 +2,7 @@
 
 # https://kubernetes.io/docs/setup/production-environment/container-runtimes/#prerequisite-ipv4-forwarding-optional
 - name: container-runtime | Enable IPv4 packet forwarding
-  ansible.builtin.sysctl:
+  ansible.posix.sysctl:
     name: net.ipv4.ip_forward
     value: 1
     state: present
