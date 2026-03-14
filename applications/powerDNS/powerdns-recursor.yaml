@@ -39,9 +39,9 @@ spec:
         command: ["pdns_recursor"]
         args:
         - --local-address=0.0.0.0
-        - --local-port=53
+        - --local-port=5353
         - --allow-from=0.0.0.0/0
-        - --forward-zones=example.com=powerdns-auth.powerdns.svc.cluster.local
+        - --forward-zones=qstack.com=10.106.193.119
 
 ---
 apiVersion: v1
@@ -55,7 +55,9 @@ spec:
   ports:
   - name: dns-udp
     port: 53
+    targetPort: 5353
     protocol: UDP
   - name: dns-tcp
     port: 53
+    targetPort: 5353
     protocol: TCP

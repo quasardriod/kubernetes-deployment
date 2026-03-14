@@ -40,6 +40,36 @@ spec:
       labels:
         app: powerdns-auth
     spec:
+      initContainers:
+      - name: pdns-db-init
+        image: alpine:3.19
+        command:
+        - sh
+        - -c
+        - |
+          echo "Installing tools..."
+          apk add --no-cache mysql-client curl
+
+          echo "Waiting for database..."
+          until mysql -h powerdns-mariadb -u powerdns -ppdnspass -e "SELECT 1" powerdns; do
+            sleep 2
+          done
+
+          echo "Checking if schema exists..."
+          TABLE_EXISTS=$(mysql -h powerdns-mariadb -u powerdns -ppdnspass -N -e \
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='powerdns' AND table_name='domains';")
+
+          if [ "$TABLE_EXISTS" = "1" ]; then
+            echo "PowerDNS schema already exists. Skipping."
+          else
+            echo "Downloading PowerDNS schema..."
+            curl -L https://raw.githubusercontent.com/PowerDNS/pdns/master/modules/gmysqlbackend/schema.mysql.sql -o schema.sql
+
+            echo "Applying schema..."
+            mysql -h powerdns-mariadb -u powerdns -ppdnspass powerdns < schema.sql
+
+            echo "Schema applied."
+          fi    
       containers:
       - name: pdns
         image: powerdns/pdns-auth-48
